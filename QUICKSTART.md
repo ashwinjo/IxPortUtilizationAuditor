@@ -4,19 +4,27 @@ Fresh clone → blocked-port watch in a few minutes. Assumes you already have **
 
 ## 1. Prerequisites
 
-| Requirement | Notes |
-|-------------|--------|
-| **Python 3.11+** | `python3 --version` |
-| **git** | To clone the repo |
+
+| Requirement       | Notes                                                                |
+| ----------------- | -------------------------------------------------------------------- |
+| **Python 3.11+**  | `python3 --version`                                                  |
+| **git**           | To clone the repo                                                    |
 | **Explorer URLs** | Base URLs for inventory + session APIs (no API keys in this project) |
-| **Docker** | Optional — only if you want InfluxDB history |
+| **Docker**        | Optional — only if you want InfluxDB history                         |
+
 
 ## 2. Clone and install
 
 ```bash
-git clone <your-repo-url> IxPortUtilizationPlotter
-cd IxPortUtilizationPlotter
+git clone <your-repo-url> IxPortUtilizationAuditor
+cd IxPortUtilizationAuditor
 
+```
+
+> On Debian/Ubuntu systems, you need to install the python3-venv package using the following command.
+> apt install python3.10-venv
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
@@ -67,10 +75,12 @@ Keep a browser tab open; it refreshes every **5 minutes**:
 
 Open `http://<your-host>:8765` (listens on all interfaces; `http://127.0.0.1:8765` works on the same machine)
 
-| Section | Same as CLI |
-|---------|-------------|
-| Blocked ports | `--blocked` |
-| All owned ports | `--all` |
+
+| Section         | Same as CLI |
+| --------------- | ----------- |
+| Blocked ports   | `--blocked` |
+| All owned ports | `--all`     |
+
 
 **Useful flags:**
 
@@ -115,15 +125,17 @@ One-shot test:
 
 ## 7. Cheat sheet
 
-| Goal | Command |
-|------|---------|
-| Blocked ports in terminal | `.venv/bin/python scripts/sync_true_port_utilization.py --blocked` |
-| All owned ports in terminal | `.venv/bin/python scripts/sync_true_port_utilization.py --all` |
-| Browser watch (5m refresh) | `.venv/bin/python scripts/port_watch_dashboard.py` |
-| One chassis | add `--chassis 10.x.x.x` |
-| Session filter | add `--server <name>` or `--tag <tag>` |
-| Blocked rules reference | [docs/blocked_port_rubric.md](docs/blocked_port_rubric.md) |
-| Full docs | [README.md](README.md) |
+
+| Goal                        | Command                                                            |
+| --------------------------- | ------------------------------------------------------------------ |
+| Blocked ports in terminal   | `.venv/bin/python scripts/sync_true_port_utilization.py --blocked` |
+| All owned ports in terminal | `.venv/bin/python scripts/sync_true_port_utilization.py --all`     |
+| Browser watch (5m refresh)  | `.venv/bin/python scripts/port_watch_dashboard.py`                 |
+| One chassis                 | add `--chassis 10.x.x.x`                                           |
+| Session filter              | add `--server <name>` or `--tag <tag>`                             |
+| Blocked rules reference     | [docs/blocked_port_rubric.md](docs/blocked_port_rubric.md)         |
+| Full docs                   | [README.md](README.md)                                             |
+
 
 ## 8. Run tests (optional)
 
@@ -133,9 +145,12 @@ One-shot test:
 
 ## Troubleshooting
 
-| Symptom | Things to try |
-|---------|----------------|
+
+| Symptom                     | Things to try                                                                                                |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Connection / timeout errors | Confirm `INVENTORY_EXPLORER_URL` and `SESSION_EXPLORER_URL` in `.env`; curl both bases from the same machine |
-| Empty blocked table | Lab may have no blocked ports; try `--all` to see owned ports |
-| Slow first load | Normal — default run triggers both Explorer polls; use `--no-refresh` for cache-only |
-| Dashboard shows old data | Click **Refresh now** or wait for the 5m cycle; server caches snapshots for 5m too |
+| Empty blocked table         | Lab may have no blocked ports; try `--all` to see owned ports                                                |
+| Slow first load             | Normal — default run triggers both Explorer polls; use `--no-refresh` for cache-only                         |
+| Dashboard shows old data    | Click **Refresh now** or wait for the 5m cycle; server caches snapshots for 5m too                           |
+
+

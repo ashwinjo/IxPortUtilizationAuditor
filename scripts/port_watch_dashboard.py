@@ -31,9 +31,11 @@ if str(_REPO_ROOT) not in sys.path:
 
 from collector.port_blocked import is_port_owned  # noqa: E402
 from collector.true_port_utilization import (  # noqa: E402
+    BLOCKED_OWNER_SUMMARY_COLUMNS,
     DISPLAY_COLUMNS,
     OWNER_REPORT_COLUMNS,
     TruePortUtilRecord,
+    build_blocked_owner_summary,
     fetch_true_port_utilization_async,
     format_calculated_fields_legend,
 )
@@ -68,9 +70,9 @@ def build_snapshot(
         "owned_count": len(owned),
         "blocked": {
             "main_table": [_row_dict(r) for r in blocked],
-            "owner_report": [_row_dict(r) for r in blocked],
+            "owner_report": build_blocked_owner_summary(blocked),
             "columns": list(DISPLAY_COLUMNS),
-            "owner_columns": list(OWNER_REPORT_COLUMNS),
+            "owner_columns": list(BLOCKED_OWNER_SUMMARY_COLUMNS),
         },
         "all_owned": {
             "owner_report": [_row_dict(r) for r in owned],

@@ -364,6 +364,25 @@ OWNER_REPORT_COLUMNS = (
     "blocked",
 )
 
+BLOCKED_OWNER_SUMMARY_COLUMNS = ("owner", "ports_hogged")
+
+
+def build_blocked_owner_summary(
+    records: list[TruePortUtilRecord],
+) -> list[dict[str, str]]:
+    """Aggregate blocked (hogged) ports by owner for triage."""
+    counts: dict[str, int] = {}
+    for record in records:
+        if record.blocked is not True:
+            continue
+        counts[record.owner] = counts.get(record.owner, 0) + 1
+    rows = [
+        {"owner": owner, "ports_hogged": str(count)}
+        for owner, count in counts.items()
+    ]
+    rows.sort(key=lambda r: (-int(r["ports_hogged"]), r["owner"]))
+    return rows
+
 
 def format_owner_ports_report(
     records: list[TruePortUtilRecord],

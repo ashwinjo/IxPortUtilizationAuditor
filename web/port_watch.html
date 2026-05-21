@@ -238,10 +238,11 @@
 
   <section id="blockedSection">
     <h2>Blocked ports <span class="meta">(CLI: <code>--blocked</code>)</span></h2>
-    <p class="section-desc">Main table and owner report for ports where <code>isHogged = Owned &amp; Unutilized</code> is <strong>Yes</strong>.</p>
+    <p class="section-desc">Ports where <code>isHogged = Owned &amp; Unutilized</code> is <strong>Yes</strong>.</p>
     <h3 class="section-desc">Main table</h3>
     <div class="table-wrap" id="blockedMain"></div>
     <h3 class="section-desc" style="margin-top:1rem">Owner report</h3>
+    <p class="section-desc">Who to contact — hogged port count per owner (sorted highest first).</p>
     <div class="table-wrap" id="blockedOwner"></div>
   </section>
 
@@ -323,7 +324,10 @@
   <script>
     const REFRESH_MS = 300_000;
 
-    const COLUMN_LABELS = { blocked: "isHogged = Owned & Unutilized" };
+    const COLUMN_LABELS = {
+      blocked: "isHogged = Owned & Unutilized",
+      ports_hogged: "# of Ports Hogged",
+    };
 
     const els = {
       status: document.getElementById("status"),
@@ -481,8 +485,7 @@
         renderTable(
           els.blockedOwner,
           data.blocked.owner_report,
-          data.blocked.owner_columns,
-          { highlightBlocked: true }
+          data.blocked.owner_columns
         );
         renderTable(
           els.ownedReport,
