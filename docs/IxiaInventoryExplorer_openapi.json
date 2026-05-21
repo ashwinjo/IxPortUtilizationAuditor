@@ -1,0 +1,2063 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+      "title": "Ixia Inventory Explorer",
+      "description": "FastAPI-based Ixia Inventory Explorer",
+      "version": "2.0.0"
+    },
+    "paths": {
+      "/api": {
+        "get": {
+          "summary": "Api Info",
+          "operationId": "api_info_api_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "/health": {
+        "get": {
+          "summary": "Health Check",
+          "operationId": "health_check_health_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/chassis": {
+        "get": {
+          "tags": [
+            "chassis"
+          ],
+          "summary": "Get Chassis",
+          "description": "Get chassis summary details",
+          "operationId": "get_chassis_api_chassis_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/chassis/{chassis_ip}": {
+        "delete": {
+          "tags": [
+            "chassis"
+          ],
+          "summary": "Delete Chassis",
+          "description": "Delete a chassis and all related data from the database",
+          "operationId": "delete_chassis_api_chassis__chassis_ip__delete",
+          "parameters": [
+            {
+              "name": "chassis_ip",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Chassis Ip"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/cards": {
+        "get": {
+          "tags": [
+            "cards"
+          ],
+          "summary": "Get Cards",
+          "description": "Get card details",
+          "operationId": "get_cards_api_cards_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CardListResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/ports": {
+        "get": {
+          "tags": [
+            "ports"
+          ],
+          "summary": "Get Ports",
+          "description": "Get port details",
+          "operationId": "get_ports_api_ports_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PortListResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/licenses": {
+        "get": {
+          "tags": [
+            "licenses"
+          ],
+          "summary": "Get Licenses",
+          "description": "Get license details",
+          "operationId": "get_licenses_api_licenses_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LicenseListResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/sensors": {
+        "get": {
+          "tags": [
+            "sensors"
+          ],
+          "summary": "Get Sensors",
+          "description": "Get sensor details",
+          "operationId": "get_sensors_api_sensors_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SensorListResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/performance/chassis-list": {
+        "get": {
+          "tags": [
+            "performance"
+          ],
+          "summary": "Get Chassis List",
+          "description": "Get list of chassis for performance metrics selection",
+          "operationId": "get_chassis_list_api_performance_chassis_list_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ChassisListForMetrics"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/performance/metrics/{ip}": {
+        "get": {
+          "tags": [
+            "performance"
+          ],
+          "summary": "Get Performance Metrics By Ip",
+          "description": "Get performance metrics for a specific chassis IP",
+          "operationId": "get_performance_metrics_by_ip_api_performance_metrics__ip__get",
+          "parameters": [
+            {
+              "name": "ip",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Ip"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PerformanceMetricListResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/config/chassis": {
+        "get": {
+          "tags": [
+            "config"
+          ],
+          "summary": "Get Configured Chassis",
+          "description": "Get list of configured chassis IPs (without passwords)",
+          "operationId": "get_configured_chassis_api_config_chassis_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ChassisConfigListResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/config/credentials": {
+        "get": {
+          "tags": [
+            "config"
+          ],
+          "summary": "Get Credentials",
+          "description": "Get full credentials including passwords for MCP servers and monitoring tools.\n\nWARNING: This endpoint exposes sensitive credentials. \nIn production, this should be protected with authentication or restricted to localhost only.\n\nReturns:\n    List of chassis configurations with ip, username, and password",
+          "operationId": "get_credentials_api_config_credentials_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/config/upload": {
+        "post": {
+          "tags": [
+            "config"
+          ],
+          "summary": "Upload Config",
+          "description": "Upload configuration",
+          "operationId": "upload_config_api_config_upload_post",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigUploadRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ConfigUploadResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/config/polling-intervals": {
+        "post": {
+          "tags": [
+            "config"
+          ],
+          "summary": "Set Polling Intervals",
+          "description": "Set polling intervals",
+          "operationId": "set_polling_intervals_api_config_polling_intervals_post",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PollingIntervalsRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PollingIntervalsResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/config/reset": {
+        "delete": {
+          "tags": [
+            "config"
+          ],
+          "summary": "Reset Db",
+          "description": "Reset the entire database",
+          "operationId": "reset_db_api_config_reset_delete",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/config/ixnetwork-servers": {
+        "get": {
+          "tags": [
+            "config"
+          ],
+          "summary": "Get Configured Ixnetwork Servers",
+          "description": "Get list of configured IxNetwork API Server IPs (without passwords)",
+          "operationId": "get_configured_ixnetwork_servers_api_config_ixnetwork_servers_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/IxNetworkConfigListResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/config/ixnetwork-credentials": {
+        "get": {
+          "tags": [
+            "config"
+          ],
+          "summary": "Get Ixnetwork Credentials",
+          "description": "Get full IxNetwork credentials including passwords for MCP servers.\n\nWARNING: This endpoint exposes sensitive credentials. \nIn production, this should be protected with authentication or restricted to localhost only.\n\nReturns:\n    List of IxNetwork API server configurations with ip, username, and password",
+          "operationId": "get_ixnetwork_credentials_api_config_ixnetwork_credentials_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/config/ixnetwork-servers/upload": {
+        "post": {
+          "tags": [
+            "config"
+          ],
+          "summary": "Upload Ixnetwork Config",
+          "description": "Upload IxNetwork API Server credentials configuration",
+          "operationId": "upload_ixnetwork_config_api_config_ixnetwork_servers_upload_post",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IxNetworkCredentialsUploadRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/IxNetworkCredentialsUploadResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/tags/add": {
+        "post": {
+          "tags": [
+            "tags"
+          ],
+          "summary": "Add Tags",
+          "description": "Add tags to chassis/cards",
+          "operationId": "add_tags_api_tags_add_post",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/TagResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/tags/remove": {
+        "post": {
+          "tags": [
+            "tags"
+          ],
+          "summary": "Remove Tags",
+          "description": "Remove tags from chassis/cards",
+          "operationId": "remove_tags_api_tags_remove_post",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/TagResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/poll/{category}": {
+        "post": {
+          "tags": [
+            "poll"
+          ],
+          "summary": "Poll Latest Data",
+          "description": "Poll latest data for a specific category",
+          "operationId": "poll_latest_data_api_poll__category__post",
+          "parameters": [
+            {
+              "name": "category",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Category"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/logs/collect": {
+        "post": {
+          "tags": [
+            "logs"
+          ],
+          "summary": "Collect Logs",
+          "description": "Collect logs from Ixia chassis",
+          "operationId": "collect_logs_api_logs_collect_post",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogCollectionRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LogCollectionResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/ixnetwork": {
+        "get": {
+          "tags": [
+            "ixnetwork"
+          ],
+          "summary": "Get Ixnetwork Servers",
+          "description": "Get IxNetwork API Server details (sessions info) from database",
+          "operationId": "get_ixnetwork_servers_api_ixnetwork_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/IxNetworkServerDetailsListResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/adk/{path}": {
+        "put": {
+          "summary": "Proxy Adk",
+          "operationId": "proxy_adk_adk__path__put",
+          "parameters": [
+            {
+              "name": "path",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Path"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "patch": {
+          "summary": "Proxy Adk",
+          "operationId": "proxy_adk_adk__path__put",
+          "parameters": [
+            {
+              "name": "path",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Path"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "delete": {
+          "summary": "Proxy Adk",
+          "operationId": "proxy_adk_adk__path__put",
+          "parameters": [
+            {
+              "name": "path",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Path"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "summary": "Proxy Adk",
+          "operationId": "proxy_adk_adk__path__put",
+          "parameters": [
+            {
+              "name": "path",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Path"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "post": {
+          "summary": "Proxy Adk",
+          "operationId": "proxy_adk_adk__path__put",
+          "parameters": [
+            {
+              "name": "path",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Path"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {}
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "CardListResponse": {
+          "properties": {
+            "cards": {
+              "items": {
+                "$ref": "#/components/schemas/CardResponse"
+              },
+              "type": "array",
+              "title": "Cards",
+              "description": "List of cards"
+            },
+            "count": {
+              "type": "integer",
+              "title": "Count",
+              "description": "Total number of cards"
+            }
+          },
+          "type": "object",
+          "required": [
+            "cards",
+            "count"
+          ],
+          "title": "CardListResponse",
+          "description": "List of cards response model",
+          "example": {
+            "cards": [],
+            "count": 0
+          }
+        },
+        "CardResponse": {
+          "properties": {
+            "chassisIp": {
+              "type": "string",
+              "title": "Chassisip",
+              "description": "Chassis IP address"
+            },
+            "chassisType": {
+              "type": "string",
+              "title": "Chassistype",
+              "description": "Type of chassis"
+            },
+            "cardNumber": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cardnumber",
+              "description": "Card number"
+            },
+            "serialNumber": {
+              "type": "string",
+              "title": "Serialnumber",
+              "description": "Card serial number"
+            },
+            "cardType": {
+              "type": "string",
+              "title": "Cardtype",
+              "description": "Type of card"
+            },
+            "cardState": {
+              "type": "string",
+              "title": "Cardstate",
+              "description": "Card state"
+            },
+            "numberOfPorts": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Numberofports",
+              "description": "Number of ports on the card"
+            },
+            "lastUpdatedAt_UTC": {
+              "type": "string",
+              "title": "Lastupdatedat Utc",
+              "description": "Last update timestamp in UTC"
+            },
+            "tags": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "title": "Tags",
+              "description": "Tags associated with card"
+            }
+          },
+          "type": "object",
+          "required": [
+            "chassisIp",
+            "chassisType",
+            "serialNumber",
+            "cardType",
+            "cardState",
+            "lastUpdatedAt_UTC"
+          ],
+          "title": "CardResponse",
+          "description": "Card details response model",
+          "example": {
+            "cardNumber": 1,
+            "cardState": "Ready",
+            "cardType": "XGS12-SD",
+            "chassisIp": "192.168.1.100",
+            "chassisType": "XGS12",
+            "lastUpdatedAt_UTC": "2024-01-01 12:00:00",
+            "numberOfPorts": 4,
+            "serialNumber": "CARD123456",
+            "tags": []
+          }
+        },
+        "ChassisConfigItem": {
+          "properties": {
+            "ip": {
+              "type": "string",
+              "title": "Ip",
+              "description": "Chassis IP address"
+            },
+            "username": {
+              "type": "string",
+              "title": "Username",
+              "description": "Username"
+            }
+          },
+          "type": "object",
+          "required": [
+            "ip",
+            "username"
+          ],
+          "title": "ChassisConfigItem",
+          "description": "Chassis configuration item (without password for GET responses)",
+          "example": {
+            "ip": "192.168.1.100",
+            "username": "admin"
+          }
+        },
+        "ChassisConfigListResponse": {
+          "properties": {
+            "chassis": {
+              "items": {
+                "$ref": "#/components/schemas/ChassisConfigItem"
+              },
+              "type": "array",
+              "title": "Chassis",
+              "description": "List of configured chassis"
+            },
+            "count": {
+              "type": "integer",
+              "title": "Count",
+              "description": "Total number of configured chassis"
+            }
+          },
+          "type": "object",
+          "required": [
+            "chassis",
+            "count"
+          ],
+          "title": "ChassisConfigListResponse",
+          "description": "List of configured chassis response model",
+          "example": {
+            "chassis": [
+              {
+                "ip": "192.168.1.100",
+                "username": "admin"
+              },
+              {
+                "ip": "192.168.1.101",
+                "username": "admin"
+              }
+            ],
+            "count": 2
+          }
+        },
+        "ChassisListForMetrics": {
+          "properties": {
+            "chassis": {
+              "items": {
+                "$ref": "#/components/schemas/ChassisListItem"
+              },
+              "type": "array",
+              "title": "Chassis",
+              "description": "List of chassis"
+            },
+            "count": {
+              "type": "integer",
+              "title": "Count",
+              "description": "Total number of chassis"
+            }
+          },
+          "type": "object",
+          "required": [
+            "chassis",
+            "count"
+          ],
+          "title": "ChassisListForMetrics",
+          "description": "List of chassis for metrics selection",
+          "example": {
+            "chassis": [],
+            "count": 0
+          }
+        },
+        "ChassisListItem": {
+          "properties": {
+            "ip": {
+              "type": "string",
+              "title": "Ip",
+              "description": "Chassis IP address"
+            },
+            "username": {
+              "type": "string",
+              "title": "Username",
+              "description": "Username"
+            },
+            "password": {
+              "type": "string",
+              "title": "Password",
+              "description": "Password"
+            }
+          },
+          "type": "object",
+          "required": [
+            "ip",
+            "username",
+            "password"
+          ],
+          "title": "ChassisListItem",
+          "description": "Chassis item for metrics selection",
+          "example": {
+            "ip": "192.168.1.100",
+            "password": "password",
+            "username": "admin"
+          }
+        },
+        "ConfigUploadRequest": {
+          "properties": {
+            "text": {
+              "type": "string",
+              "title": "Text",
+              "description": "CSV formatted configuration text (operation,ip,username,password)"
+            }
+          },
+          "type": "object",
+          "required": [
+            "text"
+          ],
+          "title": "ConfigUploadRequest",
+          "description": "Configuration upload request model",
+          "example": {
+            "text": "ADD,192.168.1.100,admin,password\nADD,192.168.1.101,admin,password"
+          }
+        },
+        "ConfigUploadResponse": {
+          "properties": {
+            "message": {
+              "type": "string",
+              "title": "Message",
+              "description": "Response message"
+            },
+            "success": {
+              "type": "boolean",
+              "title": "Success",
+              "description": "Whether upload was successful"
+            }
+          },
+          "type": "object",
+          "required": [
+            "message",
+            "success"
+          ],
+          "title": "ConfigUploadResponse",
+          "description": "Configuration upload response model",
+          "example": {
+            "message": "Configuration uploaded successfully",
+            "success": true
+          }
+        },
+        "HTTPValidationError": {
+          "properties": {
+            "detail": {
+              "items": {
+                "$ref": "#/components/schemas/ValidationError"
+              },
+              "type": "array",
+              "title": "Detail"
+            }
+          },
+          "type": "object",
+          "title": "HTTPValidationError"
+        },
+        "IxNetworkConfigItem": {
+          "properties": {
+            "ip": {
+              "type": "string",
+              "title": "Ip",
+              "description": "API Server IP address"
+            },
+            "username": {
+              "type": "string",
+              "title": "Username",
+              "description": "Username"
+            }
+          },
+          "type": "object",
+          "required": [
+            "ip",
+            "username"
+          ],
+          "title": "IxNetworkConfigItem",
+          "description": "IxNetwork API Server configuration item (without password for GET responses)",
+          "example": {
+            "ip": "192.168.1.100",
+            "username": "admin"
+          }
+        },
+        "IxNetworkConfigListResponse": {
+          "properties": {
+            "api_servers": {
+              "items": {
+                "$ref": "#/components/schemas/IxNetworkConfigItem"
+              },
+              "type": "array",
+              "title": "Api Servers",
+              "description": "List of configured API servers"
+            },
+            "count": {
+              "type": "integer",
+              "title": "Count",
+              "description": "Total number of configured API servers"
+            }
+          },
+          "type": "object",
+          "required": [
+            "api_servers",
+            "count"
+          ],
+          "title": "IxNetworkConfigListResponse",
+          "description": "List of configured IxNetwork API servers response model",
+          "example": {
+            "api_servers": [
+              {
+                "ip": "192.168.1.100",
+                "username": "admin"
+              },
+              {
+                "ip": "192.168.1.101",
+                "username": "admin"
+              }
+            ],
+            "count": 2
+          }
+        },
+        "IxNetworkCredentialsUploadRequest": {
+          "properties": {
+            "text": {
+              "type": "string",
+              "title": "Text",
+              "description": "CSV formatted configuration text (operation,ip,username,password)"
+            }
+          },
+          "type": "object",
+          "required": [
+            "text"
+          ],
+          "title": "IxNetworkCredentialsUploadRequest",
+          "description": "IxNetwork API Server credentials upload request model",
+          "example": {
+            "text": "ADD,192.168.1.100,admin,admin\nADD,192.168.1.101,admin,admin\nDELETE,192.168.1.102,admin,admin"
+          }
+        },
+        "IxNetworkCredentialsUploadResponse": {
+          "properties": {
+            "message": {
+              "type": "string",
+              "title": "Message",
+              "description": "Response message"
+            },
+            "success": {
+              "type": "boolean",
+              "title": "Success",
+              "description": "Whether upload was successful"
+            }
+          },
+          "type": "object",
+          "required": [
+            "message",
+            "success"
+          ],
+          "title": "IxNetworkCredentialsUploadResponse",
+          "description": "IxNetwork API Server credentials upload response model",
+          "example": {
+            "message": "IxNetwork API Server configuration uploaded successfully",
+            "success": true
+          }
+        },
+        "IxNetworkServerDetails": {
+          "properties": {
+            "ixnetwork_api_server_ip": {
+              "type": "string",
+              "title": "Ixnetwork Api Server Ip",
+              "description": "API Server IP address"
+            },
+            "ixnetwork_api_server_sessions": {
+              "type": "string",
+              "title": "Ixnetwork Api Server Sessions",
+              "description": "Total number of sessions"
+            },
+            "lastUpdatedAt_UTC": {
+              "type": "string",
+              "title": "Lastupdatedat Utc",
+              "description": "Last update timestamp in UTC",
+              "default": ""
+            }
+          },
+          "type": "object",
+          "required": [
+            "ixnetwork_api_server_ip",
+            "ixnetwork_api_server_sessions"
+          ],
+          "title": "IxNetworkServerDetails",
+          "description": "IxNetwork API Server polled details",
+          "example": {
+            "ixnetwork_api_server_ip": "192.168.1.100",
+            "ixnetwork_api_server_sessions": "10",
+            "lastUpdatedAt_UTC": "2024-01-01 12:00:00"
+          }
+        },
+        "IxNetworkServerDetailsListResponse": {
+          "properties": {
+            "servers": {
+              "items": {
+                "$ref": "#/components/schemas/IxNetworkServerDetails"
+              },
+              "type": "array",
+              "title": "Servers",
+              "description": "List of API server details"
+            },
+            "count": {
+              "type": "integer",
+              "title": "Count",
+              "description": "Total number of API servers"
+            }
+          },
+          "type": "object",
+          "required": [
+            "servers",
+            "count"
+          ],
+          "title": "IxNetworkServerDetailsListResponse",
+          "description": "List of IxNetwork API server details response model",
+          "example": {
+            "count": 1,
+            "servers": [
+              {
+                "ixnetwork_api_server_ip": "192.168.1.100",
+                "ixnetwork_api_server_sessions": "10",
+                "lastUpdatedAt_UTC": "2024-01-01 12:00:00"
+              }
+            ]
+          }
+        },
+        "LicenseListResponse": {
+          "properties": {
+            "licenses": {
+              "items": {
+                "$ref": "#/components/schemas/LicenseResponse"
+              },
+              "type": "array",
+              "title": "Licenses",
+              "description": "List of licenses"
+            },
+            "count": {
+              "type": "integer",
+              "title": "Count",
+              "description": "Total number of licenses"
+            }
+          },
+          "type": "object",
+          "required": [
+            "licenses",
+            "count"
+          ],
+          "title": "LicenseListResponse",
+          "description": "List of licenses response model",
+          "example": {
+            "count": 0,
+            "licenses": []
+          }
+        },
+        "LicenseResponse": {
+          "properties": {
+            "chassisIp": {
+              "type": "string",
+              "title": "Chassisip",
+              "description": "Chassis IP address"
+            },
+            "typeOfChassis": {
+              "type": "string",
+              "title": "Typeofchassis",
+              "description": "Type of chassis"
+            },
+            "hostId": {
+              "type": "string",
+              "title": "Hostid",
+              "description": "Host ID"
+            },
+            "partNumber": {
+              "type": "string",
+              "title": "Partnumber",
+              "description": "Part number"
+            },
+            "activationCode": {
+              "type": "string",
+              "title": "Activationcode",
+              "description": "Activation code"
+            },
+            "quantity": {
+              "type": "string",
+              "title": "Quantity",
+              "description": "License quantity"
+            },
+            "description": {
+              "type": "string",
+              "title": "Description",
+              "description": "License description"
+            },
+            "maintenanceDate": {
+              "type": "string",
+              "title": "Maintenancedate",
+              "description": "Maintenance date"
+            },
+            "expiryDate": {
+              "type": "string",
+              "title": "Expirydate",
+              "description": "Expiry date"
+            },
+            "isExpired": {
+              "type": "string",
+              "title": "Isexpired",
+              "description": "Whether license is expired"
+            },
+            "lastUpdatedAt_UTC": {
+              "type": "string",
+              "title": "Lastupdatedat Utc",
+              "description": "Last update timestamp in UTC"
+            }
+          },
+          "type": "object",
+          "required": [
+            "chassisIp",
+            "typeOfChassis",
+            "hostId",
+            "partNumber",
+            "activationCode",
+            "quantity",
+            "description",
+            "maintenanceDate",
+            "expiryDate",
+            "isExpired",
+            "lastUpdatedAt_UTC"
+          ],
+          "title": "LicenseResponse",
+          "description": "License details response model",
+          "example": {
+            "activationCode": "ACT123",
+            "chassisIp": "192.168.1.100",
+            "description": "IxNetwork License",
+            "expiryDate": "2025-12-31",
+            "hostId": "HOST123456",
+            "isExpired": "False",
+            "lastUpdatedAt_UTC": "2024-01-01 12:00:00",
+            "maintenanceDate": "2024-12-31",
+            "partNumber": "PART789",
+            "quantity": "1",
+            "typeOfChassis": "XGS12"
+          }
+        },
+        "LogCollectionRequest": {
+          "properties": {
+            "ip": {
+              "type": "string",
+              "title": "Ip",
+              "description": "Chassis IP address"
+            }
+          },
+          "type": "object",
+          "required": [
+            "ip"
+          ],
+          "title": "LogCollectionRequest",
+          "description": "Log collection request model",
+          "example": {
+            "ip": "192.168.1.100"
+          }
+        },
+        "LogCollectionResponse": {
+          "properties": {
+            "resultUrl": {
+              "type": "string",
+              "title": "Resulturl",
+              "description": "URL to download logs"
+            },
+            "message": {
+              "type": "string",
+              "title": "Message",
+              "description": "Response message"
+            }
+          },
+          "type": "object",
+          "required": [
+            "resultUrl",
+            "message"
+          ],
+          "title": "LogCollectionResponse",
+          "description": "Log collection response model",
+          "example": {
+            "message": "Please login to your chassis and enter this url in browser to download logs",
+            "resultUrl": "https://192.168.1.100/logs/download/abc123"
+          }
+        },
+        "PerformanceMetricListResponse": {
+          "properties": {
+            "metrics": {
+              "items": {
+                "$ref": "#/components/schemas/PerformanceMetricResponse"
+              },
+              "type": "array",
+              "title": "Metrics",
+              "description": "List of performance metrics"
+            },
+            "count": {
+              "type": "integer",
+              "title": "Count",
+              "description": "Total number of metrics"
+            },
+            "chassisIp": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Chassisip",
+              "description": "Chassis IP if filtered"
+            }
+          },
+          "type": "object",
+          "required": [
+            "metrics",
+            "count"
+          ],
+          "title": "PerformanceMetricListResponse",
+          "description": "List of performance metrics response model",
+          "example": {
+            "count": 0,
+            "metrics": []
+          }
+        },
+        "PerformanceMetricResponse": {
+          "properties": {
+            "chassisIp": {
+              "type": "string",
+              "title": "Chassisip",
+              "description": "Chassis IP address"
+            },
+            "mem_utilization": {
+              "type": "number",
+              "title": "Mem Utilization",
+              "description": "Memory utilization percentage"
+            },
+            "cpu_utilization": {
+              "type": "number",
+              "title": "Cpu Utilization",
+              "description": "CPU utilization percentage"
+            },
+            "lastUpdatedAt_UTC": {
+              "type": "string",
+              "title": "Lastupdatedat Utc",
+              "description": "Last update timestamp in UTC"
+            }
+          },
+          "type": "object",
+          "required": [
+            "chassisIp",
+            "mem_utilization",
+            "cpu_utilization",
+            "lastUpdatedAt_UTC"
+          ],
+          "title": "PerformanceMetricResponse",
+          "description": "Performance metric response model",
+          "example": {
+            "chassisIp": "192.168.1.100",
+            "cpu_utilization": 32.1,
+            "lastUpdatedAt_UTC": "2024-01-01 12:00:00",
+            "mem_utilization": 45.5
+          }
+        },
+        "PollingIntervalsRequest": {
+          "properties": {
+            "chassis": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Chassis",
+              "description": "Chassis polling interval in seconds"
+            },
+            "cards": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Cards",
+              "description": "Cards polling interval in seconds"
+            },
+            "ports": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Ports",
+              "description": "Ports polling interval in seconds"
+            },
+            "sensors": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Sensors",
+              "description": "Sensors polling interval in seconds"
+            },
+            "licensing": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Licensing",
+              "description": "Licensing polling interval in seconds"
+            },
+            "perf": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Perf",
+              "description": "Performance polling interval in seconds"
+            },
+            "purge": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Purge",
+              "description": "Data purge interval in seconds"
+            }
+          },
+          "type": "object",
+          "required": [
+            "chassis",
+            "cards",
+            "ports",
+            "sensors",
+            "licensing",
+            "perf",
+            "purge"
+          ],
+          "title": "PollingIntervalsRequest",
+          "description": "Polling intervals request model",
+          "example": {
+            "cards": 60,
+            "chassis": 60,
+            "licensing": 120,
+            "perf": 60,
+            "ports": 60,
+            "purge": 86400,
+            "sensors": 60
+          }
+        },
+        "PollingIntervalsResponse": {
+          "properties": {
+            "message": {
+              "type": "string",
+              "title": "Message",
+              "description": "Response message"
+            },
+            "intervals": {
+              "$ref": "#/components/schemas/PollingIntervalsRequest",
+              "description": "Updated polling intervals"
+            }
+          },
+          "type": "object",
+          "required": [
+            "message",
+            "intervals"
+          ],
+          "title": "PollingIntervalsResponse",
+          "description": "Polling intervals response model",
+          "example": {
+            "intervals": {
+              "cards": 60,
+              "chassis": 60,
+              "licensing": 120,
+              "perf": 60,
+              "ports": 60,
+              "purge": 86400,
+              "sensors": 60
+            },
+            "message": "Polling intervals updated successfully"
+          }
+        },
+        "PortListResponse": {
+          "properties": {
+            "ports": {
+              "items": {
+                "$ref": "#/components/schemas/PortResponse"
+              },
+              "type": "array",
+              "title": "Ports",
+              "description": "List of ports"
+            },
+            "count": {
+              "type": "integer",
+              "title": "Count",
+              "description": "Total number of ports"
+            }
+          },
+          "type": "object",
+          "required": [
+            "ports",
+            "count"
+          ],
+          "title": "PortListResponse",
+          "description": "List of ports response model",
+          "example": {
+            "count": 0,
+            "ports": []
+          }
+        },
+        "PortResponse": {
+          "properties": {
+            "chassisIp": {
+              "type": "string",
+              "title": "Chassisip",
+              "description": "Chassis IP address"
+            },
+            "typeOfChassis": {
+              "type": "string",
+              "title": "Typeofchassis",
+              "description": "Type of chassis"
+            },
+            "cardNumber": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cardnumber",
+              "description": "Card number"
+            },
+            "portNumber": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Portnumber",
+              "description": "Port number (can be integer or fully qualified name like '4.2')"
+            },
+            "linkState": {
+              "type": "string",
+              "title": "Linkstate",
+              "description": "Link state"
+            },
+            "phyMode": {
+              "type": "string",
+              "title": "Phymode",
+              "description": "Physical mode"
+            },
+            "transceiverModel": {
+              "type": "string",
+              "title": "Transceivermodel",
+              "description": "Transceiver model"
+            },
+            "transceiverManufacturer": {
+              "type": "string",
+              "title": "Transceivermanufacturer",
+              "description": "Transceiver manufacturer"
+            },
+            "owner": {
+              "type": "string",
+              "title": "Owner",
+              "description": "Port owner"
+            },
+            "speed": {
+              "type": "string",
+              "title": "Speed",
+              "description": "Port speed"
+            },
+            "type": {
+              "type": "string",
+              "title": "Type",
+              "description": "Port type"
+            },
+            "totalPorts": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Totalports",
+              "description": "Total ports"
+            },
+            "ownedPorts": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ownedports",
+              "description": "Owned ports"
+            },
+            "freePorts": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Freeports",
+              "description": "Free ports"
+            },
+            "transmitState": {
+              "type": "string",
+              "title": "Transmitstate",
+              "description": "Transmit state"
+            },
+            "lastUpdatedAt_UTC": {
+              "type": "string",
+              "title": "Lastupdatedat Utc",
+              "description": "Last update timestamp in UTC"
+            }
+          },
+          "type": "object",
+          "required": [
+            "chassisIp",
+            "typeOfChassis",
+            "linkState",
+            "phyMode",
+            "transceiverModel",
+            "transceiverManufacturer",
+            "owner",
+            "speed",
+            "type",
+            "transmitState",
+            "lastUpdatedAt_UTC"
+          ],
+          "title": "PortResponse",
+          "description": "Port details response model",
+          "example": {
+            "cardNumber": 1,
+            "chassisIp": "192.168.1.100",
+            "freePorts": 2,
+            "lastUpdatedAt_UTC": "2024-01-01 12:00:00",
+            "linkState": "Up",
+            "ownedPorts": 2,
+            "owner": "IxNetwork",
+            "phyMode": "1000BASE-X",
+            "portNumber": 1,
+            "speed": "1000",
+            "totalPorts": 4,
+            "transceiverManufacturer": "Keysight",
+            "transceiverModel": "SFP-1G-SX",
+            "transmitState": "Idle",
+            "type": "Ethernet",
+            "typeOfChassis": "XGS12"
+          }
+        },
+        "SensorListResponse": {
+          "properties": {
+            "sensors": {
+              "items": {
+                "$ref": "#/components/schemas/SensorResponse"
+              },
+              "type": "array",
+              "title": "Sensors",
+              "description": "List of sensors"
+            },
+            "count": {
+              "type": "integer",
+              "title": "Count",
+              "description": "Total number of sensors"
+            }
+          },
+          "type": "object",
+          "required": [
+            "sensors",
+            "count"
+          ],
+          "title": "SensorListResponse",
+          "description": "List of sensors response model",
+          "example": {
+            "count": 0,
+            "sensors": []
+          }
+        },
+        "SensorResponse": {
+          "properties": {
+            "chassisIp": {
+              "type": "string",
+              "title": "Chassisip",
+              "description": "Chassis IP address"
+            },
+            "typeOfChassis": {
+              "type": "string",
+              "title": "Typeofchassis",
+              "description": "Type of chassis"
+            },
+            "sensorType": {
+              "type": "string",
+              "title": "Sensortype",
+              "description": "Type of sensor"
+            },
+            "sensorName": {
+              "type": "string",
+              "title": "Sensorname",
+              "description": "Sensor name"
+            },
+            "sensorValue": {
+              "type": "string",
+              "title": "Sensorvalue",
+              "description": "Sensor value"
+            },
+            "unit": {
+              "type": "string",
+              "title": "Unit",
+              "description": "Sensor unit"
+            },
+            "lastUpdatedAt_UTC": {
+              "type": "string",
+              "title": "Lastupdatedat Utc",
+              "description": "Last update timestamp in UTC"
+            }
+          },
+          "type": "object",
+          "required": [
+            "chassisIp",
+            "typeOfChassis",
+            "sensorType",
+            "sensorName",
+            "sensorValue",
+            "unit",
+            "lastUpdatedAt_UTC"
+          ],
+          "title": "SensorResponse",
+          "description": "Sensor details response model",
+          "example": {
+            "chassisIp": "192.168.1.100",
+            "lastUpdatedAt_UTC": "2024-01-01 12:00:00",
+            "sensorName": "CPU Temperature",
+            "sensorType": "Temperature",
+            "sensorValue": "45",
+            "typeOfChassis": "XGS12",
+            "unit": "45 °C"
+          }
+        },
+        "TagRequest": {
+          "properties": {
+            "ip": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ip",
+              "description": "Chassis IP address (for chassis tags)"
+            },
+            "serialNumber": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Serialnumber",
+              "description": "Serial number (for card tags)"
+            },
+            "tags": {
+              "type": "string",
+              "title": "Tags",
+              "description": "Comma-separated list of tags"
+            }
+          },
+          "type": "object",
+          "required": [
+            "tags"
+          ],
+          "title": "TagRequest",
+          "description": "Tag request model",
+          "example": {
+            "ip": "192.168.1.100",
+            "tags": "production,lab"
+          }
+        },
+        "TagResponse": {
+          "properties": {
+            "message": {
+              "type": "string",
+              "title": "Message",
+              "description": "Response message"
+            },
+            "ip": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ip",
+              "description": "Chassis IP address"
+            },
+            "serialNumber": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Serialnumber",
+              "description": "Serial number"
+            },
+            "tags": {
+              "type": "string",
+              "title": "Tags",
+              "description": "Tags that were added/removed"
+            }
+          },
+          "type": "object",
+          "required": [
+            "message",
+            "tags"
+          ],
+          "title": "TagResponse",
+          "description": "Tag response model",
+          "example": {
+            "ip": "192.168.1.100",
+            "message": "Records successfully updated",
+            "tags": "production,lab"
+          }
+        },
+        "ValidationError": {
+          "properties": {
+            "loc": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array",
+              "title": "Location"
+            },
+            "msg": {
+              "type": "string",
+              "title": "Message"
+            },
+            "type": {
+              "type": "string",
+              "title": "Error Type"
+            },
+            "input": {
+              "title": "Input"
+            },
+            "ctx": {
+              "type": "object",
+              "title": "Context"
+            }
+          },
+          "type": "object",
+          "required": [
+            "loc",
+            "msg",
+            "type"
+          ],
+          "title": "ValidationError"
+        }
+      }
+    }
+  }
