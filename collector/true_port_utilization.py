@@ -8,7 +8,11 @@ import os
 from dataclasses import dataclass
 
 from .join_keys import inventory_join_key, session_join_key
-from .port_blocked import compute_blocked
+from .port_blocked import (
+    compute_blocked,
+    compute_blocked_without_session,
+    is_port_owned,
+)
 from .ports_client import PortRecord, fetch_port_records, trigger_ports_poll
 from .session_ports_client import (
     SessionPortRecord,
@@ -22,6 +26,8 @@ log = logging.getLogger(__name__)
 TRUE_UTIL_COLUMNS = (
     "chassis",
     "port",
+    "owner",
+    "session",
     "transmitState",
     "cp",
     "dp",
@@ -38,10 +44,33 @@ class TruePortUtilRecord:
     port: str
     owner: str
     transmit_state: str
-    cp: bool
-    dp: bool
-    utilization: bool
-    blocked: bool
+    cp: bool | None
+    dp: bool | None
+    utilization: bool | None
+    blocked: bool | None
+    ixnet_server: str = ""
+    session_id: str = ""
+    session_name: str = ""
+
+    @property
+    def in_session(self) -> bool:
+        """True when this port appears on an IxNetwork session (CP/DP/util known)."""
+        return self.cp is not None
+
+    @property
+    def session_display(self) -> str:
+        """IxNetwork server/session label, or N/A when not in any session."""
+        if not self.in_session:
+            return "N/A"
+        if self.ixnet_server and self.session_name:
+            return f"{self.ixnet_server}/{self.session_name}"
+        if self.session_name:
+            return self.session_name
+        if self.ixnet_server:
+            return self.ixnet_server
+        if self.session_id:
+            return self.session_id
+        return "N/A"
 
     @property
     def traffic_running(self) -> bool:
@@ -52,12 +81,13 @@ class TruePortUtilRecord:
         return {
             "chassis": self.chassis,
             "port": self.port,
+            "session": self.session_display,
             "owner": self.owner,
             "transmitState": self.transmit_state,
-            "cp": self.cp,
-            "dp": self.dp,
-            "utilization": self.utilization,
-            "blocked": self.blocked,
+            "cp": _metric_label(self.cp),
+            "dp": _metric_label(self.dp),
+            "utilization": _metric_label(self.utilization),
+            "blocked": _blocked_label(self.blocked),
         }
 
 
@@ -68,7 +98,7 @@ def join_port_utilization(
     """
     LEFT JOIN inventory ports with session flags on (chassis_ip, port).
 
-    Ports with no session row get cp=False, dp=False, utilization=False.
+    Ports with no session row get cp/dp/utilization ``None`` (N/A) and session ``N/A``.
     """
     session_by_key: dict[tuple[str, str], SessionPortRecord] = {}
     for row in sessions:
@@ -77,14 +107,24 @@ def join_port_utilization(
     merged: list[TruePortUtilRecord] = []
     for inv in inventory:
         sess = session_by_key.get(inventory_join_key(inv))
-        cp = sess.cp if sess else False
-        dp = sess.dp if sess else False
-        utilization = sess.utilization if sess else False
-        blocked = compute_blocked(
-            owner=inv.owner,
-            transmit_state=inv.transmit_state,
-            cp=cp,
-        )
+        if sess:
+            cp, dp, utilization = sess.cp, sess.dp, sess.utilization
+            ixnet_server = sess.ixnet_server
+            session_id = sess.session_id
+            session_name = sess.session_name
+        else:
+            cp = dp = utilization = None
+            ixnet_server = session_id = session_name = ""
+            blocked = compute_blocked_without_session(
+                owner=inv.owner,
+                transmit_state=inv.transmit_state,
+            )
+        if sess:
+            blocked = compute_blocked(
+                owner=inv.owner,
+                transmit_state=inv.transmit_state,
+                cp=cp,
+            )
         merged.append(
             TruePortUtilRecord(
                 chassis=inv.chassis_ip,
@@ -95,6 +135,9 @@ def join_port_utilization(
                 dp=dp,
                 utilization=utilization,
                 blocked=blocked,
+                ixnet_server=ixnet_server,
+                session_id=session_id,
+                session_name=session_name,
             )
         )
 
@@ -240,6 +283,40 @@ def _bool_label(value: bool) -> str:
     return "True" if value else "False"
 
 
+def _metric_label(value: bool | None) -> str:
+    """Session metric display: True / False, or N/A when not in any session."""
+    if value is None:
+        return "N/A"
+    return _bool_label(value)
+
+
+def _blocked_label(value: bool | None) -> str:
+    """Blocked display: True / False when in session, N/A when unknown."""
+    return _metric_label(value)
+
+
+def format_calculated_fields_legend() -> str:
+    """
+    End-user legend: every joined row lists transmitState with CP, DP, and utilization.
+
+    ``blocked`` is derived from owner + transmitState + CP; DP/utilization are
+    informational (always displayed, including N/A when the port is not in a session).
+    """
+    return "\n".join(
+        [
+            "--- Calculated fields (shown on every port row) ---",
+            "transmitState   Inventory Explorer — 0 = idle on chassis, 1 = active transmit",
+            "cp              Session Explorer control plane (N/A if not in any session)",
+            "dp              Session Explorer data plane (N/A if not in any session)",
+            "utilization     Session Explorer utilized flag (N/A if not in any session)",
+            "blocked         Derived: owned + in session + transmitState 0 + CP False → True",
+            "                Owned, no session: transmitState 1 → False; transmitState 0 → N/A",
+            "DP and utilization are always listed with transmitState; they do not change blocked.",
+            "Full rubric: docs/blocked_port_rubric.md",
+        ]
+    )
+
+
 def format_true_util_table(records: list[TruePortUtilRecord]) -> str:
     if not records:
         return " | ".join(DISPLAY_COLUMNS) + "\n(no rows)"
@@ -248,11 +325,13 @@ def format_true_util_table(records: list[TruePortUtilRecord]) -> str:
         {
             "chassis": r.chassis,
             "port": r.port,
+            "owner": r.owner,
+            "session": r.session_display,
             "transmitState": r.transmit_state,
-            "cp": _bool_label(r.cp),
-            "dp": _bool_label(r.dp),
-            "utilization": _bool_label(r.utilization),
-            "blocked": _bool_label(r.blocked),
+            "cp": _metric_label(r.cp),
+            "dp": _metric_label(r.dp),
+            "utilization": _metric_label(r.utilization),
+            "blocked": _blocked_label(r.blocked),
         }
         for r in records
     ]
@@ -273,24 +352,55 @@ def format_true_util_table(records: list[TruePortUtilRecord]) -> str:
     return "\n".join(lines)
 
 
-def format_blocked_ports_report(records: list[TruePortUtilRecord]) -> str:
-    """Summary of blocked ports with owner (primary metric)."""
-    blocked = [r for r in records if r.blocked]
-    if not blocked:
+OWNER_REPORT_COLUMNS = (
+    "chassis",
+    "port",
+    "session",
+    "owner",
+    "transmitState",
+    "cp",
+    "dp",
+    "utilization",
+    "blocked",
+)
+
+
+def format_owner_ports_report(
+    records: list[TruePortUtilRecord],
+    *,
+    all_owned: bool = False,
+) -> str:
+    """
+    Tabular owner report for triage.
+
+    Default (no flags): blocked ports only.
+    ``all_owned``: all owned ports (blocked, utilized, idle).
+    """
+    if all_owned:
+        filtered = [r for r in records if is_port_owned(r.owner)]
+        label = "owned"
+    else:
+        filtered = [r for r in records if r.blocked is True]
+        label = "blocked"
+    if not filtered:
+        if all_owned:
+            return "No owned ports."
         return "No blocked ports."
 
-    headers = ("chassis", "port", "owner", "transmitState", "cp", "dp", "utilization")
+    headers = OWNER_REPORT_COLUMNS
     rows = [
         {
             "chassis": r.chassis,
             "port": r.port,
+            "session": r.session_display,
             "owner": r.owner,
             "transmitState": r.transmit_state,
-            "cp": _bool_label(r.cp),
-            "dp": _bool_label(r.dp),
-            "utilization": _bool_label(r.utilization),
+            "cp": _metric_label(r.cp),
+            "dp": _metric_label(r.dp),
+            "utilization": _metric_label(r.utilization),
+            "blocked": _blocked_label(r.blocked),
         }
-        for r in blocked
+        for r in filtered
     ]
     widths = {h: len(h) for h in headers}
     for row in rows:
@@ -301,7 +411,7 @@ def format_blocked_ports_report(records: list[TruePortUtilRecord]) -> str:
         return " | ".join(str(cells[h]).ljust(widths[h]) for h in headers)
 
     lines = [
-        f"{len(blocked)} blocked port(s):",
+        f"{len(filtered)} {label} port(s):",
         fmt({h: h for h in headers}),
         fmt({h: "-" * widths[h] for h in headers}),
     ]
@@ -316,3 +426,15 @@ def format_true_util_record(record: TruePortUtilRecord) -> str:
         f"  {key}: {_bool_label(value) if isinstance(value, bool) else value}"
         for key, value in d.items()
     )
+
+
+def influx_metric_value(value: bool | None) -> int:
+    """Map bool metric to Influx integer: 1/0, or -1 for N/A."""
+    if value is None:
+        return -1
+    return int(value)
+
+
+def influx_blocked_value(blocked: bool | None) -> int:
+    """Map blocked to Influx integer: 1=true, 0=false, -1=unknown (no session)."""
+    return influx_metric_value(blocked)

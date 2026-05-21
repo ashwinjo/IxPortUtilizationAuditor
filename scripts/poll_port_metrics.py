@@ -34,7 +34,7 @@ if str(ROOT) not in sys.path:
 from collector.influx_writer import write_port_snapshots  # noqa: E402
 from collector.true_port_utilization import (  # noqa: E402
     fetch_true_port_utilization_sync,
-    format_blocked_ports_report,
+    format_owner_ports_report,
 )
 
 log = logging.getLogger("poll_port_metrics")
@@ -60,7 +60,7 @@ def poll_once(
         refresh_sessions=refresh_sessions,
         settle_seconds=settle_seconds,
     )
-    blocked = sum(1 for r in records if r.blocked)
+    blocked = sum(1 for r in records if r.blocked is True)
     log.info(
         "Fetched inventory=%s session=%s joined=%s blocked=%s",
         inv_count,
@@ -72,13 +72,13 @@ def poll_once(
     if dry_run:
         log.info("Dry run — skipping Influx write")
         if blocked:
-            print(format_blocked_ports_report(records))
+            print(format_owner_ports_report(records))
         return len(records)
 
     written = write_port_snapshots(records)
     log.info("Wrote %s points to InfluxDB", written)
     if blocked:
-        print(format_blocked_ports_report(records))
+        print(format_owner_ports_report(records))
     return written
 
 

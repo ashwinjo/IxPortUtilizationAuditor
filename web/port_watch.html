@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IxPort — Blocked Ports Watch</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #3d8bfd;
+      --danger: #f87171;
+      --danger-bg: #3f1d1d;
+      --ok: #4ade80;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      padding: 1.25rem 1.5rem 3rem;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.75rem 1.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .meta { color: var(--muted); font-size: 0.875rem; }
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.85rem;
+      font-size: 0.8rem;
+    }
+    .stat strong { display: block; font-size: 1.1rem; color: var(--text); }
+    .stat.blocked strong { color: var(--danger); }
+    .toolbar {
+      display: flex;
+      gap: 0.5rem;
+      margin-left: auto;
+    }
+    button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    button:hover { border-color: var(--accent); }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    section {
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 0.35rem;
+    }
+    .section-desc { color: var(--muted); font-size: 0.8rem; margin: 0 0 0.75rem; }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td {
+      padding: 0.45rem 0.6rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      background: #243044;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: lowercase;
+      z-index: 1;
+    }
+    th.col-ishogged {
+      text-transform: none;
+      white-space: normal;
+      min-width: 10.5rem;
+      line-height: 1.3;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(61, 139, 253, 0.06); }
+    tr.blocked-row td { background: var(--danger-bg); }
+    td.val-false { color: var(--danger); font-weight: 600; }
+    td.ishogged-yes { color: var(--danger); font-weight: 600; }
+    td.ishogged-no { color: var(--ok); font-weight: 600; }
+    td.cp-true { color: var(--ok); font-weight: 600; }
+    td.util-true { color: var(--ok); }
+    .empty { padding: 1rem; color: var(--muted); font-style: italic; }
+    .error-banner {
+      display: none;
+      background: var(--danger-bg);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+    }
+    .error-banner.visible { display: block; }
+    .loading { opacity: 0.55; pointer-events: none; }
+    details.legend {
+      margin-top: 2rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    details.legend summary { cursor: pointer; color: var(--text); }
+    details.legend pre {
+      margin: 0.5rem 0 0;
+      white-space: pre-wrap;
+      font-family: inherit;
+    }
+    nav.tabs {
+      display: flex;
+      gap: 0.25rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+    }
+    nav.tabs button {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 6px 6px 0 0;
+      padding: 0.5rem 1rem;
+      margin-bottom: -1px;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+    nav.tabs button:hover { color: var(--text); }
+    nav.tabs button.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+      font-weight: 600;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .setup-panel {
+      max-width: 42rem;
+      font-size: 0.9rem;
+    }
+    .callout {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      margin: 1rem 0;
+    }
+    .callout strong { color: var(--text); }
+    .callout.warn {
+      border-left-color: #fbbf24;
+      background: #2a2418;
+    }
+    .setup-panel ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
+    .setup-panel li { margin: 0.35rem 0; }
+    .setup-panel h2 { font-size: 1.05rem; margin-top: 1.5rem; }
+    .setup-panel h2:first-child { margin-top: 0; }
+    .wip {
+      margin-top: 1.5rem;
+      padding: 0.75rem 1rem;
+      background: #1e2430;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .wip-label {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #fbbf24;
+      margin-bottom: 0.35rem;
+    }
+    code.service {
+      font-family: ui-monospace, monospace;
+      font-size: 0.85em;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>IxPort — Blocked Ports Watch</h1>
+    <span class="meta" id="status">Loading…</span>
+    <div class="toolbar">
+      <button type="button" id="refreshBtn" class="primary">Refresh now</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Main">
+    <button type="button" role="tab" id="tabWatch" class="active" aria-selected="true" aria-controls="panelWatch">Port watch</button>
+    <button type="button" role="tab" id="tabSetup" aria-selected="false" aria-controls="panelSetup">Setup &amp; prerequisites</button>
+  </nav>
+
+  <div id="panelWatch" class="tab-panel active" role="tabpanel" aria-labelledby="tabWatch">
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="stats" id="stats"></div>
+
+  <section id="blockedSection">
+    <h2>Blocked ports <span class="meta">(CLI: <code>--blocked</code>)</span></h2>
+    <p class="section-desc">Main table and owner report for ports where <code>isHogged = Owned &amp; Unutilized</code> is <strong>Yes</strong>.</p>
+    <h3 class="section-desc">Main table</h3>
+    <div class="table-wrap" id="blockedMain"></div>
+    <h3 class="section-desc" style="margin-top:1rem">Owner report</h3>
+    <div class="table-wrap" id="blockedOwner"></div>
+  </section>
+
+  <section id="ownedSection">
+    <h2>All owned ports <span class="meta">(CLI: <code>--all</code>)</span></h2>
+    <p class="section-desc">Every port with an owner (blocked, utilized, or idle).</p>
+    <div class="table-wrap" id="ownedReport"></div>
+  </section>
+
+  <details class="legend">
+    <summary>Calculated fields legend</summary>
+    <pre id="legendText"></pre>
+  </details>
+  </div>
+
+  <div id="panelSetup" class="tab-panel setup-panel" role="tabpanel" aria-labelledby="tabSetup" hidden>
+    <h2>Before you trust this dashboard</h2>
+    <p>
+      This tool joins data from two Explorer services. Both must be <strong>up, reachable, and polling your lab</strong>
+      before port-watch numbers mean anything.
+    </p>
+
+    <div class="callout warn">
+      <strong>We need this data for accurate reporting.</strong>
+      Missing chassis or IxNetwork servers in the explorers produces incomplete joins, wrong
+      <code>isHogged</code> results, and silent gaps in the tables below.
+    </div>
+
+    <h2>Required backends</h2>
+    <ul>
+      <li>
+        <code class="service">IxiaInventoryExplorer</code> — chassis port inventory
+        (<code>owner</code>, <code>transmitState</code>, physical port list).
+      </li>
+      <li>
+        <code class="service">IxNetworkSessionsExplorer</code> — IxNetwork session ports
+        (<code>cp</code>, <code>dp</code>, <code>utilization</code>, session assignment).
+      </li>
+    </ul>
+    <p>
+      Configure their base URLs in this project&apos;s <code>.env</code>
+      (<code>INVENTORY_EXPLORER_URL</code>, <code>SESSION_EXPLORER_URL</code>).
+      The dashboard triggers on-demand polls on both services before each refresh (unless you start the server with <code>--no-refresh</code>).
+    </p>
+
+    <h2>What you must register in each explorer</h2>
+    <ul>
+      <li>
+        <strong>IxiaInventoryExplorer</strong> — add <strong>every chassis</strong> in your lab
+        that should appear in utilization / hogging reports.
+      </li>
+      <li>
+        <strong>IxNetworkSessionsExplorer</strong> — add <strong>every IxNetwork Web API server</strong>
+        (<code>IxNetworkWebAPI</code> endpoints) that runs sessions you care about.
+      </li>
+    </ul>
+    <p>
+      If a chassis or server is not registered, its ports never enter the join — you may see
+      &quot;no blocked ports&quot; when the lab is actually hogged, or <code>N/A</code> session fields
+      for owned ports that are only visible on inventory.
+    </p>
+
+    <h2>How this dashboard uses them</h2>
+    <ol>
+      <li>Inventory Explorer returns all chassis ports.</li>
+      <li>Session Explorer returns ports tied to IxNetwork sessions.</li>
+      <li>This app left-joins on <code>(chassis, port)</code> and derives <code>isHogged</code> from owner + transmit + CP rules.</li>
+    </ol>
+
+    <div class="wip">
+      <div class="wip-label">WIP</div>
+      Working on <strong>Windows-based manual IxNetwork clients</strong> inclusion in
+      <code class="service">IxNetworkSessionsExplorer</code>.
+      Until that lands, some desktop IxNetwork sessions may not appear in session data and can be misclassified
+      (e.g. owned ports with <code>transmitState</code> active but no session row).
+    </div>
+  </div>
+
+  <script>
+    const REFRESH_MS = 300_000;
+
+    const COLUMN_LABELS = { blocked: "isHogged = Owned & Unutilized" };
+
+    const els = {
+      status: document.getElementById("status"),
+      stats: document.getElementById("stats"),
+      errorBanner: document.getElementById("errorBanner"),
+      blockedMain: document.getElementById("blockedMain"),
+      blockedOwner: document.getElementById("blockedOwner"),
+      ownedReport: document.getElementById("ownedReport"),
+      legendText: document.getElementById("legendText"),
+      refreshBtn: document.getElementById("refreshBtn"),
+      body: document.body,
+      tabWatch: document.getElementById("tabWatch"),
+      tabSetup: document.getElementById("tabSetup"),
+      panelWatch: document.getElementById("panelWatch"),
+      panelSetup: document.getElementById("panelSetup"),
+    };
+
+    function switchTab(which) {
+      const watch = which === "watch";
+      els.tabWatch.classList.toggle("active", watch);
+      els.tabSetup.classList.toggle("active", !watch);
+      els.tabWatch.setAttribute("aria-selected", watch ? "true" : "false");
+      els.tabSetup.setAttribute("aria-selected", watch ? "false" : "true");
+      els.panelWatch.classList.toggle("active", watch);
+      els.panelSetup.classList.toggle("active", !watch);
+      els.panelWatch.hidden = !watch;
+      els.panelSetup.hidden = watch;
+      els.refreshBtn.style.visibility = watch ? "visible" : "hidden";
+    }
+
+    els.tabWatch.addEventListener("click", () => switchTab("watch"));
+    els.tabSetup.addEventListener("click", () => switchTab("setup"));
+
+    let countdownTimer = null;
+    let nextRefreshAt = 0;
+
+    function formatTime(iso) {
+      if (!iso) return "—";
+      const d = new Date(iso);
+      return d.toLocaleString();
+    }
+
+    function columnHeader(col) {
+      const label = COLUMN_LABELS[col] || col;
+      const extra = col === "blocked" ? ' class="col-ishogged"' : "";
+      return `<th${extra}>${escapeHtml(label)}</th>`;
+    }
+
+    function formatCellDisplay(col, raw) {
+      if (col === "blocked") {
+        if (raw === "True") return "Yes";
+        if (raw === "False") return "No";
+      }
+      return String(raw);
+    }
+
+    function cellClass(col, raw) {
+      if (col === "blocked") {
+        if (raw === "True") return "ishogged-yes";
+        if (raw === "False") return "ishogged-no";
+        return "";
+      }
+      if (raw === "False") return "val-false";
+      if (col === "cp" && raw === "True") return "cp-true";
+      if (col === "utilization" && raw === "True") return "util-true";
+      return "";
+    }
+
+    function renderTable(container, rows, columns, { highlightBlocked = false } = {}) {
+      if (!rows || rows.length === 0) {
+        container.innerHTML = '<div class="empty">No rows.</div>';
+        return;
+      }
+      const thead = columns.map((c) => columnHeader(c)).join("");
+      const tbody = rows
+        .map((row) => {
+          const blocked = row.blocked === "True";
+          const trClass = highlightBlocked && blocked ? ' class="blocked-row"' : "";
+          const cells = columns
+            .map((col) => {
+              const raw = row[col] ?? "";
+              const display = formatCellDisplay(col, raw);
+              const cls = cellClass(col, raw);
+              const classAttr = cls ? ` class="${cls}"` : "";
+              return `<td${classAttr}>${escapeHtml(display)}</td>`;
+            })
+            .join("");
+          return `<tr${trClass}>${cells}</tr>`;
+        })
+        .join("");
+      container.innerHTML = `<table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>`;
+    }
+
+    function escapeHtml(s) {
+      return s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function renderStats(data) {
+      const items = [
+        { label: "isHogged (Yes)", value: data.blocked_count, cls: "blocked" },
+        { label: "Owned", value: data.owned_count },
+        { label: "Joined rows", value: data.joined_count },
+        { label: "Inventory ports", value: data.inventory_count },
+        { label: "Session ports", value: data.session_count },
+      ];
+      els.stats.innerHTML = items
+        .map(
+          (s) =>
+            `<div class="stat ${s.cls || ""}"><span>${s.label}</span><strong>${s.value}</strong></div>`
+        )
+        .join("");
+    }
+
+    function showError(msg) {
+      els.errorBanner.textContent = msg;
+      els.errorBanner.classList.add("visible");
+    }
+
+    function clearError() {
+      els.errorBanner.classList.remove("visible");
+      els.errorBanner.textContent = "";
+    }
+
+    function updateCountdown() {
+      const sec = Math.max(0, Math.ceil((nextRefreshAt - Date.now()) / 1000));
+      const base = els.status.dataset.base || "";
+      els.status.textContent = `${base} · next refresh in ${sec}s`;
+      if (sec <= 0 && !els.body.classList.contains("loading")) {
+        loadSnapshot(false);
+      }
+    }
+
+    async function loadSnapshot(force) {
+      els.body.classList.add("loading");
+      clearError();
+      try {
+        const url = force ? "/api/snapshot?force=1" : "/api/snapshot";
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || res.statusText);
+        }
+
+        renderStats(data);
+        renderTable(
+          els.blockedMain,
+          data.blocked.main_table,
+          data.blocked.columns,
+          { highlightBlocked: true }
+        );
+        renderTable(
+          els.blockedOwner,
+          data.blocked.owner_report,
+          data.blocked.owner_columns,
+          { highlightBlocked: true }
+        );
+        renderTable(
+          els.ownedReport,
+          data.all_owned.owner_report,
+          data.all_owned.owner_columns
+        );
+        els.legendText.textContent = (data.legend || []).join("\n");
+
+        const fetched = formatTime(data.fetched_at);
+        els.status.dataset.base = `Last updated ${fetched}`;
+        nextRefreshAt = Date.now() + REFRESH_MS;
+        updateCountdown();
+      } catch (err) {
+        showError(`Failed to load snapshot: ${err.message}`);
+        els.status.textContent = "Error loading data";
+      } finally {
+        els.body.classList.remove("loading");
+      }
+    }
+
+    els.refreshBtn.addEventListener("click", () => loadSnapshot(true));
+
+    loadSnapshot(false);
+    setInterval(updateCountdown, 1000);
+    setInterval(() => loadSnapshot(false), REFRESH_MS);
+  </script>
+</body>
+</html>

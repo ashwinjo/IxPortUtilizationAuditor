@@ -13,22 +13,5 @@ services:
       DOCKER_INFLUXDB_INIT_BUCKET: port_metrics
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: df-linocnK8uapajl3o8LfE5uIdPYch8CrS6gv4rDPO-t5woazw8_3cAt4idHVVf5zdpI3J5JIMA67pTOrZUPg==
 
-  grafana:
-    image: grafana/grafana:11.4.0
-    ports:
-      - "3005:3000"
-    volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: changeme-grafana-admin
-      GF_AUTH_ANONYMOUS_ENABLED: "false"
-      INFLUXDB_ORG: ixport
-      INFLUXDB_BUCKET: port_metrics
-      INFLUXDB_TOKEN: df-linocnK8uapajl3o8LfE5uIdPYch8CrS6gv4rDPO-t5woazw8_3cAt4idHVVf5zdpI3J5JIMA67pTOrZUPg==
-    depends_on:
-      - influxdb
-
 volumes:
   influxdb-data:

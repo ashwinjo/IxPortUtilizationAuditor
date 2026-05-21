@@ -2,8 +2,14 @@
 """
 Fetch inventory + session ports, join in memory, print utilization view.
 
-Output columns: chassis, port, transmitState, cp, dp, utilization, blocked
-Blocked summary lists owner for ports flagged blocked.
+By default triggers a fresh poll on both Explorer services before each read:
+  Inventory: POST /api/poll/ports  (chassis port inventory)
+  Session:   POST /poll/trigger    (IxNetwork session ports)
+
+Use --no-refresh* to read Explorer cache only (faster, may be stale).
+
+Output columns: chassis, port, owner, session, transmitState, cp, dp, utilization, blocked.
+Blocked summary section lists ports where blocked=True.
 """
 
 from __future__ import annotations
@@ -21,7 +27,8 @@ if str(_REPO_ROOT) not in sys.path:
 from collector.true_port_utilization import (
     TruePortUtilRecord,
     fetch_true_port_utilization_sync,
-    format_blocked_ports_report,
+    format_calculated_fields_legend,
+    format_owner_ports_report,
     format_true_util_record,
     format_true_util_table,
 )
@@ -71,7 +78,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=(
             "Fetch both APIs, join on chassis_ip + port, print "
-            "chassis | port | transmitState | cp | dp | utilization | blocked"
+            "chassis | port | owner | session | transmitState | cp | dp | utilization | blocked"
         )
     )
     parser.add_argument(
@@ -98,25 +105,33 @@ if __name__ == "__main__":
         action="store_true",
         help="Print one joined record as JSON plus key=value detail",
     )
-    parser.add_argument(
+    view = parser.add_mutually_exclusive_group()
+    view.add_argument(
+        "--all",
+        action="store_true",
+        help="Owner report: all owned ports (blocked, utilized, idle)",
+    )
+    view.add_argument(
         "--blocked-only",
+        "--blocked",
         action="store_true",
-        help="Show only rows where blocked=True",
+        dest="blocked_only",
+        help="Main table and owner report: only blocked=True rows",
     )
     parser.add_argument(
-        "--refresh-inventory",
+        "--no-refresh-inventory",
         action="store_true",
-        help="POST /api/poll/ports before fetch (slower, fresher inventory)",
+        help="Skip POST /api/poll/ports (read cached inventory only)",
     )
     parser.add_argument(
-        "--refresh-sessions",
+        "--no-refresh-sessions",
         action="store_true",
-        help="POST /poll/trigger before fetch (slower, fresher sessions)",
+        help="Skip POST /poll/trigger (read cached sessions only)",
     )
     parser.add_argument(
-        "--refresh",
+        "--no-refresh",
         action="store_true",
-        help="Shorthand for --refresh-inventory --refresh-sessions",
+        help="Skip both poll triggers (fastest, may be stale)",
     )
     parser.add_argument(
         "--refresh-settle",
@@ -125,10 +140,15 @@ if __name__ == "__main__":
         metavar="SECONDS",
         help="Wait after refresh triggers before GET (default: REFRESH_SETTLE_SECONDS or 3)",
     )
+    parser.add_argument(
+        "--no-legend",
+        action="store_true",
+        help="Skip calculated-fields legend after tables",
+    )
     args = parser.parse_args()
 
-    refresh_inventory = args.refresh_inventory or args.refresh
-    refresh_sessions = args.refresh_sessions or args.refresh
+    refresh_inventory = not (args.no_refresh_inventory or args.no_refresh)
+    refresh_sessions = not (args.no_refresh_sessions or args.no_refresh)
 
     records, _, _ = run_end_to_end(
         inventory_url=args.inventory_url,
@@ -146,7 +166,7 @@ if __name__ == "__main__":
     report_records = records
 
     if args.blocked_only:
-        records = [r for r in records if r.blocked]
+        records = [r for r in records if r.blocked is True]
 
     if args.sample and records:
         sample = records[0]
@@ -162,6 +182,19 @@ if __name__ == "__main__":
     print(format_true_util_table(records))
     print(f"\n{len(records)} row(s) shown")
 
+    owner_title = (
+        "All owned ports (owner)"
+        if args.all
+        else "Blocked ports (owner)"
+    )
     print()
-    print("--- Blocked ports (owner) ---")
-    print(format_blocked_ports_report(report_records))
+    print(f"--- {owner_title} ---")
+    print(
+        format_owner_ports_report(
+            report_records,
+            all_owned=args.all,
+        )
+    )
+    if not args.no_legend:
+        print()
+        print(format_calculated_fields_legend())

@@ -28,16 +28,35 @@ class SessionPortRecord:
     cp: bool
     dp: bool
     utilization: bool
+    ixnet_server: str = ""
+    session_id: str = ""
+    session_name: str = ""
 
     @property
     def chassis(self) -> str:
         """Alias for ``chassis_ip`` (session API chassis identifier)."""
         return self.chassis_ip
 
+    @property
+    def session_label(self) -> str:
+        """Human-readable IxNetwork session (server/name)."""
+        if self.ixnet_server and self.session_name:
+            return f"{self.ixnet_server}/{self.session_name}"
+        if self.session_name:
+            return self.session_name
+        if self.ixnet_server:
+            return self.ixnet_server
+        if self.session_id:
+            return self.session_id
+        return ""
+
     def as_row(self) -> dict[str, str]:
         return {
             "Chassis": self.chassis_ip,
             "Port": self.port,
+            "IxNetwork Server": self.ixnet_server,
+            "Session": self.session_name,
+            "Session ID": self.session_id,
             "CP": _yes_no(self.cp),
             "DP": _yes_no(self.dp),
             "Utilization": _yes_no(self.utilization),
@@ -71,7 +90,13 @@ def _port_label(port_obj: dict[str, Any]) -> str:
     return ""
 
 
-def normalize_session_port(port_obj: dict[str, Any]) -> SessionPortRecord | None:
+def normalize_session_port(
+    port_obj: dict[str, Any],
+    *,
+    ixnet_server: str = "",
+    session_id: str = "",
+    session_name: str = "",
+) -> SessionPortRecord | None:
     chassis_ip = _chassis_ip_from_port(port_obj)
     port = _port_label(port_obj)
     if not chassis_ip or not port:
@@ -82,6 +107,9 @@ def normalize_session_port(port_obj: dict[str, Any]) -> SessionPortRecord | None
         cp=bool(port_obj.get("cp_active")),
         dp=bool(port_obj.get("dp_active")),
         utilization=bool(port_obj.get("utilized")),
+        ixnet_server=ixnet_server,
+        session_id=session_id,
+        session_name=session_name,
     )
 
 
@@ -92,28 +120,6 @@ def normalize_sessions_response(payload: dict[str, Any]) -> list[SessionPortReco
     records: list[SessionPortRecord] = []
 
     for server in servers:
-        for session in server.get("sessions") or []:
-            for port_obj in session.get("ports") or []:
-                if not isinstance(port_obj, dict):
-                    continue
-                record = normalize_session_port(port_obj)
-                if record is not None:
-                    records.append(record)
-
-    records.sort(key=lambda r: (r.chassis_ip, r.port))
-    return records
-
-
-def normalize_sessions_with_metadata(
-    payload: dict[str, Any],
-) -> tuple[list[SessionPortRecord], list[dict[str, str]]]:
-    """Flatten GET /sessions/ with ixnet_server / session_id / session_name per row."""
-    data = payload.get("data", payload)
-    servers = data.get("servers") or []
-    records: list[SessionPortRecord] = []
-    metadata: list[dict[str, str]] = []
-
-    for server in servers:
         server_name = str(server.get("name") or "")
         for session in server.get("sessions") or []:
             session_id = str(session.get("id") or "")
@@ -121,26 +127,17 @@ def normalize_sessions_with_metadata(
             for port_obj in session.get("ports") or []:
                 if not isinstance(port_obj, dict):
                     continue
-                record = normalize_session_port(port_obj)
-                if record is None:
-                    continue
-                records.append(record)
-                metadata.append(
-                    {
-                        "ixnet_server": server_name,
-                        "session_id": session_id,
-                        "session_name": session_name,
-                    }
+                record = normalize_session_port(
+                    port_obj,
+                    ixnet_server=server_name,
+                    session_id=session_id,
+                    session_name=session_name,
                 )
+                if record is not None:
+                    records.append(record)
 
-    combined = sorted(
-        zip(records, metadata),
-        key=lambda pair: (pair[0].chassis_ip, pair[0].port),
-    )
-    if not combined:
-        return [], []
-    records, metadata = zip(*combined)
-    return list(records), list(metadata)
+    records.sort(key=lambda r: (r.chassis_ip, r.port))
+    return records
 
 
 async def trigger_session_poll(
@@ -244,42 +241,6 @@ def fetch_session_port_records_sync(
 ) -> list[SessionPortRecord]:
     return asyncio.run(
         fetch_session_port_records(
-            base_url,
-            server=server,
-            tag=tag,
-            timeout=timeout,
-        )
-    )
-
-
-async def fetch_session_ports_with_metadata(
-    base_url: str | None = None,
-    *,
-    server: str | None = None,
-    tag: str | None = None,
-    session: aiohttp.ClientSession | None = None,
-    timeout: float = 60.0,
-) -> tuple[list[SessionPortRecord], list[dict[str, str]]]:
-    """Fetch sessions and return (records, per-row session metadata)."""
-    payload = await fetch_sessions_raw(
-        base_url,
-        server=server,
-        tag=tag,
-        session=session,
-        timeout=timeout,
-    )
-    return normalize_sessions_with_metadata(payload)
-
-
-def fetch_session_ports_with_metadata_sync(
-    base_url: str | None = None,
-    *,
-    server: str | None = None,
-    tag: str | None = None,
-    timeout: float = 60.0,
-) -> tuple[list[SessionPortRecord], list[dict[str, str]]]:
-    return asyncio.run(
-        fetch_session_ports_with_metadata(
             base_url,
             server=server,
             tag=tag,
