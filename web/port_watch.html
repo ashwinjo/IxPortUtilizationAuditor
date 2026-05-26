@@ -4,43 +4,130 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>IxPort — Blocked Ports Watch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
+    /* ── Design Tokens — Dark (default / NOC Terminal) ──────────────── */
     :root {
-      --bg: #0f1419;
-      --surface: #1a2332;
-      --border: #2d3a4d;
-      --text: #e7ecf3;
-      --muted: #8b9cb3;
-      --accent: #3d8bfd;
-      --danger: #f87171;
-      --danger-bg: #3f1d1d;
-      --ok: #4ade80;
+      --bg:              #04060d;
+      --surface:         #080c15;
+      --surface-alt:     #0c1120;
+      --surface-raised:  #111827;
+      --surface-hover:   #141d2e;
+
+      --border:          #161f30;
+      --border-med:      #1e2d42;
+      --border-bright:   #2a3f5c;
+
+      --text:            #e2eaf4;
+      --text-muted:      #8da8c0;
+      --text-dim:        #4a6478;
+
+      --cyan:            #00c8e8;
+      --cyan-dim:        rgba(0, 200, 232, 0.08);
+      --cyan-glow:       rgba(0, 200, 232, 0.20);
+      --cyan-hover:      #22d4f0;
+
+      --green:           #00e676;
+      --green-dim:       rgba(0, 230, 118, 0.08);
+      --green-border:    rgba(0, 230, 118, 0.25);
+
+      --amber:           #f59e0b;
+
+      --crimson:         #f43f5e;
+      --crimson-dim:     rgba(244, 63, 94, 0.08);
+      --crimson-border:  rgba(244, 63, 94, 0.30);
+
+      --font-mono:       'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      --radius:          6px;
+      --radius-lg:       8px;
+      --ease:            150ms ease;
     }
-    * { box-sizing: border-box; }
+
+    /* ── Reset ───────────────────────────────────────────────────────── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      margin: 0;
-      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      font-family: var(--font-mono);
       background: var(--bg);
       color: var(--text);
-      line-height: 1.45;
-      padding: 1.25rem 1.5rem 3rem;
+      line-height: 1.50;
+      font-size: 0.8125rem;
+      padding: 0 0 3rem;
     }
+
+    /* ── Header — pinned Keysight Purple ─────────────────────────────── */
     header {
+      background: #291B44;
+      border-bottom: 1px solid #3d2860;
       display: flex;
       flex-wrap: wrap;
-      align-items: baseline;
+      align-items: center;
       gap: 0.75rem 1.5rem;
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 1rem;
+      padding: 0 24px;
+      height: 56px;
     }
-    h1 {
-      margin: 0;
-      font-size: 1.35rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
+    .logo {
+      font-size: 1.3rem;
+      white-space: nowrap;
     }
-    .meta { color: var(--muted); font-size: 0.875rem; }
+    .logo-ix  { color: #E90029; }
+    .logo-se  { color: rgba(255, 255, 255, 0.55); }
+    .hdr-divider {
+      width: 1px; height: 24px;
+      background: rgba(255, 255, 255, 0.15); flex-shrink: 0;
+    }
+    .hdr-title {
+      font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.90);
+    }
+    .hdr-sub {
+      font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.40);
+    }
+    .hdr-spacer { flex: 1; }
+    .meta { color: rgba(255, 255, 255, 0.45); font-size: 0.78rem; }
+
+    /* ── Toolbar ─────────────────────────────────────────────────────── */
+    .toolbar {
+      display: flex;
+      gap: 0.5rem;
+    }
+    button {
+      font-family: var(--font-mono);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: rgba(255, 255, 255, 0.80);
+      padding: 4px 12px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      transition: background var(--ease), border-color var(--ease);
+    }
+    button:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.30);
+      color: #ffffff;
+    }
+    button.primary {
+      background: var(--cyan-dim);
+      border-color: rgba(0, 200, 232, 0.35);
+      color: var(--cyan);
+    }
+    button.primary:hover {
+      background: rgba(0, 200, 232, 0.18);
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+      color: var(--cyan-hover);
+    }
+
+    /* ── Page Body ───────────────────────────────────────────────────── */
+    .page-body {
+      padding: 1.25rem 1.5rem;
+    }
+
+    /* ── Stats ───────────────────────────────────────────────────────── */
     .stats {
       display: flex;
       flex-wrap: wrap;
@@ -49,52 +136,81 @@
     }
     .stat {
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      border: 1px solid var(--border-med);
+      border-radius: var(--radius-lg);
       padding: 0.5rem 0.85rem;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
     }
-    .stat strong { display: block; font-size: 1.1rem; color: var(--text); }
-    .stat.blocked strong { color: var(--danger); }
-    .toolbar {
+    .stat strong { display: block; font-size: 1.05rem; color: var(--text); }
+    .stat.blocked strong { color: var(--crimson); }
+
+    /* ── Tabs ────────────────────────────────────────────────────────── */
+    nav.tabs {
       display: flex;
-      gap: 0.5rem;
-      margin-left: auto;
+      gap: 0.25rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-med);
+      padding-bottom: 0;
     }
-    button {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.4rem 0.75rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.8rem;
+    nav.tabs button {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 0.5rem 1rem;
+      margin-bottom: -1px;
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      box-shadow: none;
     }
-    button:hover { border-color: var(--accent); }
-    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-    section {
-      margin-bottom: 2rem;
+    nav.tabs button:hover {
+      color: var(--text-muted);
+      background: transparent;
+      border-color: transparent;
+      box-shadow: none;
     }
-    h2 {
-      font-size: 1rem;
+    nav.tabs button.active {
+      color: var(--cyan);
+      border-bottom-color: var(--cyan);
       font-weight: 600;
+      background: transparent;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Section headings ────────────────────────────────────────────── */
+    section { margin-bottom: 2rem; }
+    h2 {
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--text-muted);
       margin: 0 0 0.35rem;
     }
-    .section-desc { color: var(--muted); font-size: 0.8rem; margin: 0 0 0.75rem; }
+    .section-desc {
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      margin: 0 0 0.75rem;
+    }
+
+    /* ── Tables ──────────────────────────────────────────────────────── */
     .table-wrap {
       overflow-x: auto;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius-lg);
       background: var(--surface);
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-variant-numeric: tabular-nums;
     }
     th, td {
-      padding: 0.45rem 0.6rem;
+      padding: 7px 12px;
       text-align: left;
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
@@ -102,10 +218,12 @@
     th {
       position: sticky;
       top: 0;
-      background: #243044;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: lowercase;
+      background: var(--surface-raised);
+      font-weight: 700;
+      font-size: 0.65rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(0, 200, 232, 0.65);
       z-index: 1;
     }
     th.col-ishogged {
@@ -115,116 +233,126 @@
       line-height: 1.3;
     }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(61, 139, 253, 0.06); }
-    tr.blocked-row td { background: var(--danger-bg); }
-    td.val-false { color: var(--danger); font-weight: 600; }
-    td.ishogged-yes { color: var(--danger); font-weight: 600; }
-    td.ishogged-no { color: var(--ok); font-weight: 600; }
-    td.cp-true { color: var(--ok); font-weight: 600; }
-    td.util-true { color: var(--ok); }
-    .empty { padding: 1rem; color: var(--muted); font-style: italic; }
+    tr:hover td { background: var(--surface-hover); }
+    tr.blocked-row td { background: var(--crimson-dim); }
+    td.val-false    { color: var(--crimson); font-weight: 600; }
+    td.ishogged-yes { color: var(--crimson); font-weight: 600; }
+    td.ishogged-no  { color: var(--green);   font-weight: 600; }
+    td.cp-true      { color: var(--green);   font-weight: 600; }
+    td.util-true    { color: var(--green); }
+
+    /* ── Empty state ─────────────────────────────────────────────────── */
+    .empty {
+      padding: 1rem 12px;
+      color: var(--text-dim);
+      font-style: italic;
+      font-size: 0.75rem;
+    }
+
+    /* ── Error banner ────────────────────────────────────────────────── */
     .error-banner {
       display: none;
-      background: var(--danger-bg);
-      border: 1px solid var(--danger);
-      color: var(--danger);
+      background: var(--crimson-dim);
+      border: 1px solid var(--crimson-border);
+      color: var(--crimson);
       padding: 0.65rem 0.85rem;
-      border-radius: 8px;
+      border-radius: var(--radius-lg);
       margin-bottom: 1rem;
-      font-size: 0.85rem;
+      font-size: 0.80rem;
     }
     .error-banner.visible { display: block; }
     .loading { opacity: 0.55; pointer-events: none; }
-    details.legend {
-      margin-top: 2rem;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-    details.legend summary { cursor: pointer; color: var(--text); }
-    details.legend pre {
-      margin: 0.5rem 0 0;
-      white-space: pre-wrap;
-      font-family: inherit;
-    }
-    nav.tabs {
-      display: flex;
-      gap: 0.25rem;
-      margin-bottom: 1.25rem;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 0;
-    }
-    nav.tabs button {
-      background: transparent;
-      border: none;
-      border-bottom: 2px solid transparent;
-      border-radius: 6px 6px 0 0;
-      padding: 0.5rem 1rem;
-      margin-bottom: -1px;
-      color: var(--muted);
-      font-size: 0.875rem;
-    }
-    nav.tabs button:hover { color: var(--text); }
-    nav.tabs button.active {
-      color: var(--text);
-      border-bottom-color: var(--accent);
-      font-weight: 600;
-    }
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
-    .setup-panel {
-      max-width: 42rem;
-      font-size: 0.9rem;
-    }
+
+    /* ── Callout (setup tab) ─────────────────────────────────────────── */
     .callout {
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
-      border-radius: 8px;
+      border: 1px solid var(--border-med);
+      border-left: 3px solid var(--cyan);
+      border-radius: var(--radius-lg);
       padding: 0.85rem 1rem;
       margin: 1rem 0;
     }
     .callout strong { color: var(--text); }
     .callout.warn {
-      border-left-color: #fbbf24;
-      background: #2a2418;
+      border-left-color: var(--amber);
+      background: var(--surface-alt);
+    }
+
+    /* ── Legend ──────────────────────────────────────────────────────── */
+    details.legend {
+      margin-top: 2rem;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+    details.legend summary { cursor: pointer; color: var(--text-muted); }
+    details.legend pre {
+      margin: 0.5rem 0 0;
+      white-space: pre-wrap;
+      font-family: var(--font-mono);
+    }
+
+    /* ── Setup panel ─────────────────────────────────────────────────── */
+    .setup-panel {
+      max-width: 42rem;
+      font-size: 0.875rem;
     }
     .setup-panel ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
-    .setup-panel li { margin: 0.35rem 0; }
-    .setup-panel h2 { font-size: 1.05rem; margin-top: 1.5rem; }
+    .setup-panel li { margin: 0.35rem 0; color: var(--text-muted); }
+    .setup-panel h2 { font-size: 0.78rem; margin-top: 1.5rem; }
     .setup-panel h2:first-child { margin-top: 0; }
+    .setup-panel p { color: var(--text-muted); margin: 0.5rem 0; }
+    .setup-panel ol { margin: 0.5rem 0 0; padding-left: 1.25rem; }
+    .setup-panel ol li { margin: 0.35rem 0; color: var(--text-muted); }
+
+    /* ── WIP notice ──────────────────────────────────────────────────── */
     .wip {
       margin-top: 1.5rem;
       padding: 0.75rem 1rem;
-      background: #1e2430;
-      border: 1px dashed var(--border);
-      border-radius: 8px;
-      font-size: 0.85rem;
-      color: var(--muted);
+      background: var(--surface-alt);
+      border: 1px dashed var(--border-med);
+      border-radius: var(--radius-lg);
+      font-size: 0.80rem;
+      color: var(--text-dim);
     }
     .wip-label {
       display: inline-block;
-      font-size: 0.7rem;
-      font-weight: 600;
+      font-size: 0.65rem;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: #fbbf24;
+      letter-spacing: 0.08em;
+      color: var(--amber);
       margin-bottom: 0.35rem;
     }
+
+    /* ── Service code ────────────────────────────────────────────────── */
     code.service {
-      font-family: ui-monospace, monospace;
+      font-family: var(--font-mono);
       font-size: 0.85em;
-      color: var(--accent);
+      color: var(--cyan);
+    }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.85em;
+      color: var(--text-muted);
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>IxPort — Blocked Ports Watch</h1>
+    <div class="logo"><span class="logo-ix">Ix</span><span class="logo-se">Port</span></div>
+    <div class="hdr-divider"></div>
+    <div>
+      <div class="hdr-title">Blocked Ports Watch</div>
+      <div class="hdr-sub">Port Utilization Monitor</div>
+    </div>
+    <div class="hdr-spacer"></div>
     <span class="meta" id="status">Loading…</span>
     <div class="toolbar">
       <button type="button" id="refreshBtn" class="primary">Refresh now</button>
     </div>
   </header>
+
+  <div class="page-body">
 
   <nav class="tabs" role="tablist" aria-label="Main">
     <button type="button" role="tab" id="tabWatch" class="active" aria-selected="true" aria-controls="panelWatch">Port watch</button>
@@ -237,8 +365,8 @@
   <div class="stats" id="stats"></div>
 
   <section id="blockedSection">
-    <h2>Blocked ports <span class="meta">(CLI: <code>--blocked</code>)</span></h2>
-    <p class="section-desc">Ports where <code>isHogged = Owned &amp; Unutilized</code> is <strong>Yes</strong>.</p>
+    <h2>Blocked ports <span class="meta" style="font-size:0.65rem">(CLI: <code>--blocked</code>)</span></h2>
+    <p class="section-desc">Ports where <code>isHogged = Owned &amp; Unutilized</code> is <strong style="color:var(--text-muted)">Yes</strong>.</p>
     <h3 class="section-desc">Main table</h3>
     <div class="table-wrap" id="blockedMain"></div>
     <h3 class="section-desc" style="margin-top:1rem">Owner report</h3>
@@ -247,7 +375,7 @@
   </section>
 
   <section id="ownedSection">
-    <h2>All owned ports <span class="meta">(CLI: <code>--all</code>)</span></h2>
+    <h2>All owned ports <span class="meta" style="font-size:0.65rem">(CLI: <code>--all</code>)</span></h2>
     <p class="section-desc">Every port with an owner (blocked, utilized, or idle).</p>
     <div class="table-wrap" id="ownedReport"></div>
   </section>
@@ -261,7 +389,7 @@
   <div id="panelSetup" class="tab-panel setup-panel" role="tabpanel" aria-labelledby="tabSetup" hidden>
     <h2>Before you trust this dashboard</h2>
     <p>
-      This tool joins data from two Explorer services. Both must be <strong>up, reachable, and polling your lab</strong>
+      This tool joins data from two Explorer services. Both must be <strong style="color:var(--text)">up, reachable, and polling your lab</strong>
       before port-watch numbers mean anything.
     </p>
 
@@ -291,11 +419,11 @@
     <h2>What you must register in each explorer</h2>
     <ul>
       <li>
-        <strong>IxiaInventoryExplorer</strong> — add <strong>every chassis</strong> in your lab
+        <strong style="color:var(--text)">IxiaInventoryExplorer</strong> — add <strong style="color:var(--text)">every chassis</strong> in your lab
         that should appear in utilization / hogging reports.
       </li>
       <li>
-        <strong>IxNetworkSessionsExplorer</strong> — add <strong>every IxNetwork Web API server</strong>
+        <strong style="color:var(--text)">IxNetworkSessionsExplorer</strong> — add <strong style="color:var(--text)">every IxNetwork Web API server</strong>
         (<code>IxNetworkWebAPI</code> endpoints) that runs sessions you care about.
       </li>
     </ul>
@@ -314,12 +442,14 @@
 
     <div class="wip">
       <div class="wip-label">WIP</div>
-      Working on <strong>Windows-based manual IxNetwork clients</strong> inclusion in
+      Working on <strong style="color:var(--text-muted)">Windows-based manual IxNetwork clients</strong> inclusion in
       <code class="service">IxNetworkSessionsExplorer</code>.
       Until that lands, some desktop IxNetwork sessions may not appear in session data and can be misclassified
       (e.g. owned ports with <code>transmitState</code> active but no session row).
     </div>
   </div>
+
+  </div><!-- /.page-body -->
 
   <script>
     const REFRESH_MS = 300_000;
