@@ -239,14 +239,85 @@ Normalizes chassis IP and `card.port` labels so inventory and session APIs align
 
 ---
 
+## Running the tool
+
+### As a CLI script
+
+```bash
+# Full report — all joined ports + blocked owner summary
+.venv/bin/python scripts/sync_true_port_utilization.py
+
+# Blocked ports only
+.venv/bin/python scripts/sync_true_port_utilization.py --blocked-only
+
+# Skip on-demand poll (faster, uses cached Explorer data)
+.venv/bin/python scripts/sync_true_port_utilization.py --no-refresh
+```
+
+### As an API backend
+
+Serves two JSON endpoints at `http://0.0.0.0:8890`.
+
+**Install extra dependencies (first time only):**
+
+```bash
+pip install fastapi "uvicorn[standard]"
+```
+
+**Start the server:**
+
+```bash
+uvicorn api.main:app --host 0.0.0.0 --port 8890 --reload
+```
+
+**Endpoints:**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/v1/ports/owned` | All owned ports with per-port `blocked` flag |
+| `GET` | `/api/v1/ports/blocked` | Blocked ports list + `owner_summary` (who/how many) |
+
+**Query parameters (both endpoints):**
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `chassis` | — | Filter results to one chassis IP |
+| `server` | — | Session Explorer server filter |
+| `tag` | — | Session Explorer tag filter |
+| `refresh` | `false` | Trigger fresh Explorer poll before fetch |
+
+**Example requests:**
+
+```bash
+# All owned ports (cached)
+curl http://localhost:8890/api/v1/ports/owned
+
+# Blocked ports + owner summary, fresh poll
+curl "http://localhost:8890/api/v1/ports/blocked?refresh=true"
+
+# Scoped to one chassis
+curl "http://localhost:8890/api/v1/ports/owned?chassis=10.36.236.121"
+```
+
+**Interactive docs (Swagger UI):**
+
+```
+http://localhost:8890/docs
+```
+
+---
+
 ## Project layout
 
 ```
+api/
+  main.py                         # FastAPI app — /api/v1/ports/owned + /blocked
+  models.py                       # Pydantic response models
 collector/
-  ports_client.py           # Inventory Explorer
-  session_ports_client.py   # Session Explorer
-  true_port_utilization.py  # fetch, join, format
-  port_blocked.py             # blocked rules
+  ports_client.py                 # Inventory Explorer
+  session_ports_client.py         # Session Explorer
+  true_port_utilization.py        # fetch, join, format
+  port_blocked.py                 # blocked rules
   join_keys.py
   influx_writer.py
 scripts/
