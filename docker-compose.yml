@@ -8,7 +8,7 @@ services:
         required: false
     environment:
       INVENTORY_EXPLORER_URL: ${INVENTORY_EXPLORER_URL:-http://ixnse.ashai.online:3001}
-      SESSION_EXPLORER_URL:   ${SESSION_EXPLORER_URL:-http://localhost:8080}
+      SESSION_EXPLORER_URL:   ${SESSION_EXPLORER_URL:-http://host.docker.internal:8080}
     restart: unless-stopped
 
   influxdb:
