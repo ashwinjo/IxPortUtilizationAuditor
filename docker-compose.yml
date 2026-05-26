@@ -1,4 +1,16 @@
 services:
+  ixport:
+    build: .
+    ports:
+      - "8890:8890"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      INVENTORY_EXPLORER_URL: ${INVENTORY_EXPLORER_URL:-http://ixnse.ashai.online:3001}
+      SESSION_EXPLORER_URL:   ${SESSION_EXPLORER_URL:-http://localhost:8080}
+    restart: unless-stopped
+
   influxdb:
     image: influxdb:2.7
     ports:

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from collector.port_blocked import is_port_owned
 from collector.true_port_utilization import (
@@ -20,11 +23,25 @@ from .models import (
     OwnedPortsResponse,
 )
 
+_DASHBOARD = Path(__file__).parent.parent / "web" / "ixport_dashboard.html"
+
 app = FastAPI(
     title="IxPort Utilization API",
     version="1.0.0",
     description="JSON API for Ixia port ownership and blocked-port analysis.",
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/", include_in_schema=False)
+def dashboard() -> FileResponse:
+    return FileResponse(_DASHBOARD, media_type="text/html")
 
 
 def _fetch(

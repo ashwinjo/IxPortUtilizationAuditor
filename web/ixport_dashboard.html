@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IxPort — Port Utilization Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne+Mono&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Design Tokens ─────────────────────────────────────────────── */
+    :root {
+      --bg:             #05070a;
+      --surface:        #0b0f14;
+      --surface-alt:    #0f1520;
+      --surface-raised: #141a24;
+      --border:         #1a2230;
+      --border-med:     #243040;
+      --border-bright:  #2e4060;
+      --text:           #dce8f0;
+      --text-muted:     #8baabb;
+      --text-dim:       #4a6680;
+      --text-xdim:      #1e3040;
+      --cyan:           #00c8e8;
+      --cyan-dim:       rgba(0,200,232,0.12);
+      --cyan-glow:      rgba(0,200,232,0.25);
+      --cyan-hover:     #20d8f8;
+      --green:          #00e676;
+      --green-dim:      rgba(0,230,118,0.10);
+      --amber:          #ffab00;
+      --amber-dim:      rgba(255,171,0,0.12);
+      --crimson:        #ff3355;
+      --crimson-dim:    rgba(255,51,85,0.10);
+      --font-display:   'Syne Mono', 'JetBrains Mono', monospace;
+      --font-mono:      'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      --radius-sm:      2px;
+      --radius:         4px;
+      --radius-lg:      6px;
+      --ease:           150ms ease;
+      --ease-med:       250ms ease;
+    }
+
+    /* ── Reset ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      line-height: 1.55;
+      min-width: 800px;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────── */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+      display: flex; align-items: center; padding: 0 24px; gap: 16px;
+    }
+    header::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: 0.6;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      letter-spacing: 0em;
+      white-space: nowrap;
+    }
+    .logo-ix  { color: var(--cyan); }
+    .logo-se  { color: var(--text-muted); }
+    .hdr-divider {
+      width: 1px; height: 24px;
+      background: var(--border-med); flex-shrink: 0;
+    }
+    .hdr-titles { display: flex; flex-direction: column; gap: 1px; }
+    .hdr-title  {
+      font-family: var(--font-display);
+      font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text);
+    }
+    .hdr-sub {
+      font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .hdr-spacer { flex: 1; }
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      border: 1px solid rgba(0,230,118,0.25);
+      background: rgba(0,230,118,0.05);
+      border-radius: var(--radius);
+      padding: 3px 10px;
+      font-family: var(--font-display);
+      font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--green);
+    }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green);
+      animation: pulse-live 2.4s ease infinite;
+    }
+    @keyframes pulse-live {
+      0%,100% { box-shadow: 0 0 4px rgba(0,230,118,0.4); }
+      50%      { box-shadow: 0 0 10px rgba(0,230,118,0.8); }
+    }
+
+    /* ── Control Bar ─────────────────────────────────────────────────── */
+    #control-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 24px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .prompt-chevron { color: var(--cyan); opacity: 0.7; font-size: 1rem; }
+    #poll-ts { font-size: 0.72rem; color: var(--text-dim); white-space: nowrap; }
+    #poll-ts span { color: var(--text-muted); }
+    .ctrl-sep {
+      width: 1px; height: 18px;
+      background: var(--border-med); flex-shrink: 0;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 11px; border: 1px solid transparent;
+      border-radius: var(--radius);
+      font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500;
+      letter-spacing: 0.04em; cursor: pointer;
+      transition: background var(--ease), border-color var(--ease),
+                  box-shadow var(--ease), opacity var(--ease);
+    }
+    .btn-primary {
+      background: var(--cyan-dim); border-color: rgba(0,200,232,0.35);
+      color: var(--cyan);
+    }
+    .btn-primary:hover {
+      background: rgba(0,200,232,0.18); border-color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+    .btn-neutral {
+      background: transparent; border-color: var(--border-med);
+      color: var(--text-muted);
+    }
+    .btn-neutral:hover {
+      background: var(--surface-raised); border-color: var(--border-bright);
+      color: var(--text);
+    }
+    .btn-toggle {
+      background: transparent; border-color: var(--border-med);
+      color: var(--text-dim);
+    }
+    .btn-toggle.active {
+      background: var(--green-dim); border-color: rgba(0,230,118,0.3);
+      color: var(--green);
+    }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .filter-input {
+      background: var(--surface-alt); border: 1px solid var(--border-med);
+      border-radius: var(--radius); color: var(--text);
+      font-family: var(--font-mono); font-size: 0.75rem;
+      padding: 5px 10px; outline: none; letter-spacing: 0.03em;
+      width: 140px;
+      transition: border-color var(--ease), box-shadow var(--ease);
+    }
+    .filter-input::placeholder { color: var(--text-xdim); }
+    .filter-input:focus {
+      border-color: rgba(0,200,232,0.5);
+      box-shadow: 0 0 0 3px rgba(0,200,232,0.06);
+    }
+    .filter-label {
+      font-size: 0.68rem; letter-spacing: 0.10em; text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .filter-group { display: flex; align-items: center; gap: 6px; }
+
+    /* ── Tabs ────────────────────────────────────────────────────────── */
+    #tab-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex; gap: 0;
+    }
+    .tab {
+      padding: 10px 18px;
+      font-family: var(--font-display);
+      font-size: 0.70rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text-dim); cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color var(--ease), border-color var(--ease);
+    }
+    .tab:hover { color: var(--text-muted); }
+    .tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+    .tab-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--surface-raised); border: 1px solid var(--border-med);
+      border-radius: 10px; padding: 0 6px; min-width: 20px; height: 16px;
+      font-size: 0.60rem; letter-spacing: 0.04em;
+      color: var(--text-dim); margin-left: 6px;
+      transition: background var(--ease), color var(--ease);
+    }
+    .tab.active .tab-badge {
+      background: var(--cyan-dim); border-color: rgba(0,200,232,0.35);
+      color: var(--cyan);
+    }
+
+    /* ── Main Content ─────────────────────────────────────────────────── */
+    #main-content {
+      max-width: 1440px; margin: 0 auto;
+      padding: 20px 24px;
+    }
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+
+    /* ── Table ───────────────────────────────────────────────────────── */
+    .table-wrap {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.75rem;
+    }
+    thead tr {
+      background: var(--surface-raised);
+      border-bottom: 1px solid var(--border-med);
+    }
+    th {
+      padding: 7px 12px;
+      color: rgba(0,200,232,0.65);
+      font-size: 0.65rem; letter-spacing: 0.16em; text-transform: uppercase;
+      font-weight: 700; white-space: nowrap; text-align: left;
+    }
+    td {
+      padding: 8px 12px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.015); }
+    tbody tr:hover td { color: var(--text); }
+
+    /* ── Cell Components ──────────────────────────────────────────────── */
+    .cell-chassis { color: var(--text-dim); font-size: 0.72rem; }
+    .cell-port    { color: var(--cyan-hover); font-weight: 500; }
+    .cell-owner   { color: var(--text); }
+
+    /* blocked pill */
+    .pill {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 1px 8px; border-radius: var(--radius);
+      font-family: var(--font-display);
+      font-size: 0.60rem; letter-spacing: 0.10em; text-transform: uppercase;
+      font-weight: 600; white-space: nowrap;
+    }
+    .pill-blocked {
+      background: rgba(255,51,85,0.10); border: 1px solid rgba(255,51,85,0.35);
+      color: var(--crimson);
+    }
+    .pill-clear {
+      background: rgba(0,230,118,0.10); border: 1px solid rgba(0,230,118,0.3);
+      color: var(--green);
+    }
+    .pill-na {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    .pill-tx-active {
+      background: var(--amber-dim); border: 1px solid rgba(255,171,0,0.4);
+      color: var(--amber);
+    }
+    .pill-tx-idle {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+
+    /* CP/DP box */
+    .plane-box {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: var(--radius-sm);
+      font-size: 0.70rem; font-weight: 700;
+    }
+    .plane-on  { background: rgba(0,230,118,0.12); border: 1px solid rgba(0,230,118,0.25); color: var(--green); }
+    .plane-off { background: rgba(255,51,85,0.10); border: 1px solid rgba(255,51,85,0.30); color: var(--crimson); }
+    .plane-na  { color: var(--text-dim); }
+
+    /* session */
+    .cell-session { color: var(--text-muted); font-size: 0.72rem; }
+    .session-name { color: var(--text); font-size: 0.78rem; letter-spacing: 0.03em; }
+    .session-id   { color: var(--text-dim); font-size: 0.66rem; margin-top: 1px; }
+
+    /* owner summary bar */
+    .hog-bar-wrap { display: flex; align-items: center; gap: 10px; }
+    .hog-bar-bg   {
+      flex: 1; height: 6px; background: var(--surface-raised);
+      border-radius: 3px; overflow: hidden; min-width: 80px;
+    }
+    .hog-bar-fill {
+      height: 100%; border-radius: 3px;
+      background: var(--crimson);
+      box-shadow: 0 0 6px rgba(255,51,85,0.4);
+      transition: width 0.4s ease;
+    }
+    .hog-count {
+      color: var(--crimson); font-weight: 700; font-size: 0.80rem;
+      min-width: 24px; text-align: right;
+    }
+
+    /* ── Empty / Loading / Error ───────────────────────────────────────── */
+    .state-cell {
+      padding: 56px 24px; text-align: center;
+      font-family: var(--font-mono); letter-spacing: 0.04em;
+    }
+    .state-loading { color: var(--text-dim); }
+    .state-empty   { color: var(--text-dim); }
+    .state-error   { color: var(--crimson); }
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 1.5px solid var(--border-med);
+      border-top-color: var(--cyan);
+      animation: spin 0.65s linear infinite;
+      margin-right: 8px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ───────────────────────────────────────────────────────── */
+    #toast-container {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column-reverse; gap: 6px;
+      z-index: 2000; pointer-events: none;
+    }
+    .toast {
+      background: var(--surface-raised);
+      border: 1px solid var(--border-med);
+      border-left: 3px solid var(--border-bright);
+      border-radius: var(--radius);
+      padding: 9px 14px;
+      font-size: 0.75rem; font-family: var(--font-mono);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      max-width: 340px; color: var(--text-muted);
+      pointer-events: auto;
+      animation: toast-in 220ms cubic-bezier(0.34,1.3,0.64,1) both;
+    }
+    .toast.toast-ok    { border-left-color: var(--green);   color: rgba(0,230,118,0.85); }
+    .toast.toast-error { border-left-color: var(--crimson); color: rgba(255,120,140,0.9); }
+    @keyframes toast-in {
+      from { transform: translateX(110%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────── -->
+<header>
+  <div class="logo"><span class="logo-ix">Ix</span><span class="logo-se">Port</span></div>
+  <div class="hdr-divider"></div>
+  <div class="hdr-titles">
+    <div class="hdr-title">Port Utilization Monitor</div>
+    <div class="hdr-sub">Inventory &amp; Session Explorer</div>
+  </div>
+  <div class="hdr-spacer"></div>
+  <div class="live-badge">
+    <div class="live-dot"></div>
+    LIVE
+  </div>
+</header>
+
+<!-- ── Control Bar ──────────────────────────────────────────────── -->
+<div id="control-bar">
+  <span class="prompt-chevron">›</span>
+  <div id="poll-ts">polled <span id="ts-value">—</span></div>
+  <div class="ctrl-sep"></div>
+  <button class="btn btn-primary" id="btn-refresh">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.68"/>
+    </svg>
+    Refresh
+  </button>
+  <div class="ctrl-sep"></div>
+  <div class="filter-group">
+    <span class="filter-label">Chassis</span>
+    <input class="filter-input" id="filter-chassis" type="text" placeholder="e.g. 10.0.0.1" />
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Server</span>
+    <input class="filter-input" id="filter-server" type="text" placeholder="ixnetworkweb" />
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Tag</span>
+    <input class="filter-input" id="filter-tag" type="text" placeholder="lab" style="width:100px" />
+  </div>
+  <div class="ctrl-sep"></div>
+  <button class="btn btn-toggle" id="btn-auto">
+    <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;margin-right:2px"></span>
+    Auto 5m
+  </button>
+</div>
+
+<!-- ── Tab Bar ──────────────────────────────────────────────────── -->
+<div id="tab-bar">
+  <div class="tab active" data-tab="owned">Owned Ports <span class="tab-badge" id="badge-owned">—</span></div>
+  <div class="tab" data-tab="blocked">Blocked Ports <span class="tab-badge" id="badge-blocked">—</span></div>
+  <div class="tab" data-tab="summary">Owner Summary <span class="tab-badge" id="badge-summary">—</span></div>
+</div>
+
+<!-- ── Main Content ──────────────────────────────────────────────── -->
+<div id="main-content">
+
+  <!-- Owned Ports -->
+  <div class="tab-section active" id="section-owned">
+    <div class="table-wrap">
+      <table id="tbl-owned">
+        <thead>
+          <tr>
+            <th>Chassis</th>
+            <th>Port</th>
+            <th>Owner</th>
+            <th>TX State</th>
+            <th>Blocked</th>
+            <th>CP</th>
+            <th>DP</th>
+            <th>Utilized</th>
+            <th>Session</th>
+          </tr>
+        </thead>
+        <tbody id="body-owned">
+          <tr><td colspan="9" class="state-cell state-loading"><span class="spinner"></span>Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Blocked Ports -->
+  <div class="tab-section" id="section-blocked">
+    <div class="table-wrap">
+      <table id="tbl-blocked">
+        <thead>
+          <tr>
+            <th>Chassis</th>
+            <th>Port</th>
+            <th>Owner</th>
+            <th>TX State</th>
+            <th>CP</th>
+            <th>In Session</th>
+            <th>Session Name</th>
+            <th>Server</th>
+          </tr>
+        </thead>
+        <tbody id="body-blocked">
+          <tr><td colspan="8" class="state-cell state-loading"><span class="spinner"></span>Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Owner Summary -->
+  <div class="tab-section" id="section-summary">
+    <div class="table-wrap">
+      <table id="tbl-summary">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Owner</th>
+            <th style="min-width:200px">Ports Hogged</th>
+          </tr>
+        </thead>
+        <tbody id="body-summary">
+          <tr><td colspan="3" class="state-cell state-loading"><span class="spinner"></span>Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Toasts ──────────────────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<script>
+  const API = '';  // same origin; override with e.g. 'http://localhost:8890' if opening HTML directly
+
+  // ── Helpers ────────────────────────────────────────────────────────
+  function planePill(val) {
+    if (val === true)  return '<span class="plane-box plane-on">✓</span>';
+    if (val === false) return '<span class="plane-box plane-off">✗</span>';
+    return '<span class="plane-na">—</span>';
+  }
+
+  function blockedPill(val) {
+    if (val === true)  return '<span class="pill pill-blocked">Blocked</span>';
+    if (val === false) return '<span class="pill pill-clear">Clear</span>';
+    return '<span class="pill pill-na">N/A</span>';
+  }
+
+  function txPill(state) {
+    return state === '1'
+      ? '<span class="pill pill-tx-active">TX Active</span>'
+      : '<span class="pill pill-tx-idle">Idle</span>';
+  }
+
+  function sessionCell(row) {
+    if (!row.in_session) return '<span style="color:var(--text-dim)">—</span>';
+    const name = row.session_name || row.session_id || '(session)';
+    const id   = row.session_id && row.session_name ? `<div class="session-id">${row.session_id.slice(0,16)}…</div>` : '';
+    return `<div class="session-name">${name}</div>${id}`;
+  }
+
+  function inSessionPill(val) {
+    return val
+      ? '<span class="pill pill-clear" style="font-size:0.58rem">Yes</span>'
+      : '<span class="pill pill-na"    style="font-size:0.58rem">No</span>';
+  }
+
+  function toast(msg, type = '') {
+    const el = document.createElement('div');
+    el.className = 'toast' + (type ? ' toast-' + type : '');
+    el.textContent = msg;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────
+  function renderOwned(data) {
+    const body = document.getElementById('body-owned');
+    if (!data || !data.ports || data.ports.length === 0) {
+      body.innerHTML = '<tr><td colspan="9" class="state-cell state-empty">No owned ports found.</td></tr>';
+      document.getElementById('badge-owned').textContent = '0';
+      return;
+    }
+    document.getElementById('badge-owned').textContent = data.total;
+    body.innerHTML = data.ports.map(r => `
+      <tr>
+        <td class="cell-chassis">${r.chassis}</td>
+        <td class="cell-port">${r.port}</td>
+        <td class="cell-owner">${r.owner}</td>
+        <td>${txPill(r.transmit_state)}</td>
+        <td>${blockedPill(r.blocked)}</td>
+        <td style="text-align:center">${planePill(r.cp)}</td>
+        <td style="text-align:center">${planePill(r.dp)}</td>
+        <td style="text-align:center">${planePill(r.utilization)}</td>
+        <td class="cell-session">${sessionCell(r)}</td>
+      </tr>
+    `).join('');
+  }
+
+  function renderBlocked(data) {
+    const body = document.getElementById('body-blocked');
+    if (!data || !data.ports || data.ports.length === 0) {
+      body.innerHTML = '<tr><td colspan="8" class="state-cell state-empty">No blocked ports. All clear.</td></tr>';
+      document.getElementById('badge-blocked').textContent = '0';
+      return;
+    }
+    document.getElementById('badge-blocked').textContent = data.total_blocked;
+    body.innerHTML = data.ports.map(r => `
+      <tr>
+        <td class="cell-chassis">${r.chassis}</td>
+        <td class="cell-port">${r.port}</td>
+        <td class="cell-owner">${r.owner}</td>
+        <td>${txPill(r.transmit_state)}</td>
+        <td style="text-align:center">${planePill(r.cp)}</td>
+        <td style="text-align:center">${inSessionPill(r.in_session)}</td>
+        <td class="cell-session">${r.session_name || '<span style="color:var(--text-dim)">—</span>'}</td>
+        <td style="color:var(--text-dim)">${r.ixnet_server || '—'}</td>
+      </tr>
+    `).join('');
+  }
+
+  function renderSummary(data) {
+    const body = document.getElementById('body-summary');
+    const rows = data && data.owner_summary ? data.owner_summary : [];
+    if (rows.length === 0) {
+      body.innerHTML = '<tr><td colspan="3" class="state-cell state-empty">No blocked ports to summarize.</td></tr>';
+      document.getElementById('badge-summary').textContent = '0';
+      return;
+    }
+    document.getElementById('badge-summary').textContent = rows.length;
+    const max = rows[0].ports_hogged;
+    body.innerHTML = rows.map((r, i) => `
+      <tr>
+        <td style="color:var(--text-dim);width:36px">${i + 1}</td>
+        <td class="cell-owner">${r.owner}</td>
+        <td>
+          <div class="hog-bar-wrap">
+            <div class="hog-bar-bg">
+              <div class="hog-bar-fill" style="width:${Math.round((r.ports_hogged/max)*100)}%"></div>
+            </div>
+            <span class="hog-count">${r.ports_hogged}</span>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function setLoading() {
+    document.getElementById('body-owned').innerHTML    = '<tr><td colspan="9" class="state-cell state-loading"><span class="spinner"></span>Loading…</td></tr>';
+    document.getElementById('body-blocked').innerHTML  = '<tr><td colspan="8" class="state-cell state-loading"><span class="spinner"></span>Loading…</td></tr>';
+    document.getElementById('body-summary').innerHTML  = '<tr><td colspan="3" class="state-cell state-loading"><span class="spinner"></span>Loading…</td></tr>';
+  }
+
+  function setError(msg) {
+    document.getElementById('body-owned').innerHTML    = `<tr><td colspan="9" class="state-cell state-error">${msg}</td></tr>`;
+    document.getElementById('body-blocked').innerHTML  = `<tr><td colspan="8" class="state-cell state-error">${msg}</td></tr>`;
+    document.getElementById('body-summary').innerHTML  = `<tr><td colspan="3" class="state-cell state-error">${msg}</td></tr>`;
+  }
+
+  // ── Fetch ──────────────────────────────────────────────────────────
+  async function fetchAll(forceRefresh = false) {
+    const btn = document.getElementById('btn-refresh');
+    btn.disabled = true;
+    setLoading();
+
+    const chassis = document.getElementById('filter-chassis').value.trim();
+    const server  = document.getElementById('filter-server').value.trim();
+    const tag     = document.getElementById('filter-tag').value.trim();
+
+    const qs = new URLSearchParams();
+    if (chassis)      qs.set('chassis', chassis);
+    if (server)       qs.set('server',  server);
+    if (tag)          qs.set('tag',     tag);
+    if (forceRefresh) qs.set('refresh', 'true');
+    const q = qs.toString() ? '?' + qs.toString() : '';
+
+    try {
+      const [ownedRes, blockedRes] = await Promise.all([
+        fetch(`${API}/api/v1/ports/owned${q}`),
+        fetch(`${API}/api/v1/ports/blocked${q}`),
+      ]);
+
+      if (!ownedRes.ok)   throw new Error(`/ports/owned → ${ownedRes.status}`);
+      if (!blockedRes.ok) throw new Error(`/ports/blocked → ${blockedRes.status}`);
+
+      const [owned, blocked] = await Promise.all([ownedRes.json(), blockedRes.json()]);
+
+      renderOwned(owned);
+      renderBlocked(blocked);
+      renderSummary(blocked);
+
+      const now = new Date();
+      document.getElementById('ts-value').textContent =
+        now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      if (forceRefresh) toast('Data refreshed', 'ok');
+    } catch (err) {
+      setError(`API error: ${err.message}`);
+      toast(`Fetch failed: ${err.message}`, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Tabs ───────────────────────────────────────────────────────────
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('section-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Controls ───────────────────────────────────────────────────────
+  document.getElementById('btn-refresh').addEventListener('click', () => fetchAll(true));
+
+  let autoTimer = null;
+  const btnAuto = document.getElementById('btn-auto');
+  btnAuto.addEventListener('click', () => {
+    if (autoTimer) {
+      clearInterval(autoTimer);
+      autoTimer = null;
+      btnAuto.classList.remove('active');
+    } else {
+      autoTimer = setInterval(() => fetchAll(false), 5 * 60 * 1000);
+      btnAuto.classList.add('active');
+      toast('Auto-refresh on (5 min)', 'ok');
+    }
+  });
+
+  // ── Init ───────────────────────────────────────────────────────────
+  fetchAll(false);
+</script>
+</body>
+</html>
