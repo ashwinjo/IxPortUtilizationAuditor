@@ -11,6 +11,17 @@ services:
       SESSION_EXPLORER_URL:   ${SESSION_EXPLORER_URL:-http://host.docker.internal:8080}
     restart: unless-stopped
 
+  ixport-mcp:
+    build: .
+    command: python mcp/server.py
+    ports:
+      - "8887:8887"
+    environment:
+      IXPORT_API_URL: http://ixport:8890
+    depends_on:
+      - ixport
+    restart: unless-stopped
+
   influxdb:
     image: influxdb:2.7
     ports:

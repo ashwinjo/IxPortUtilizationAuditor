@@ -36,4 +36,9 @@ echo "  Dashboard  → http://localhost:${PORT}"
 echo "  Swagger UI → http://localhost:${PORT}/docs"
 echo ""
 
-exec docker compose up ixport
+docker compose up -d ixport
+
+echo "Starting IxPort MCP server on http://0.0.0.0:8887"
+docker compose build ixport-mcp
+docker compose up -d ixport-mcp
+echo "  MCP endpoint → http://localhost:8887/mcp"
