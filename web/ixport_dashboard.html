@@ -653,13 +653,14 @@
   // ── Render ─────────────────────────────────────────────────────────
   function renderOwned(data) {
     const body = document.getElementById('body-owned');
-    if (!data || !data.ports || data.ports.length === 0) {
+    const ports = (data && data.ports || []).filter(r => r.blocked !== null && r.blocked !== undefined);
+    if (ports.length === 0) {
       body.innerHTML = '<tr><td colspan="9" class="state-cell state-empty">No owned ports found.</td></tr>';
       document.getElementById('badge-owned').textContent = '0';
       return;
     }
-    document.getElementById('badge-owned').textContent = data.total;
-    body.innerHTML = data.ports.map(r => `
+    document.getElementById('badge-owned').textContent = ports.length;
+    body.innerHTML = ports.map(r => `
       <tr>
         <td class="cell-chassis">${r.chassis}</td>
         <td class="cell-port">${r.port}</td>
