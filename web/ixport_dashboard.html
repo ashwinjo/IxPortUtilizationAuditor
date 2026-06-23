@@ -793,8 +793,9 @@
   // ── Controls ───────────────────────────────────────────────────────
   document.getElementById('btn-refresh').addEventListener('click', () => fetchAll(true));
 
-  let autoTimer = null;
   const btnAuto = document.getElementById('btn-auto');
+  let autoTimer = setInterval(() => fetchAll(false), 5 * 60 * 1000);
+  btnAuto.classList.add('active');
   btnAuto.addEventListener('click', () => {
     if (autoTimer) {
       clearInterval(autoTimer);
